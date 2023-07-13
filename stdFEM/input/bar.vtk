@@ -1,0 +1,27 @@
+# vtk DataFile Version 2.0
+Results for /Users/qinxusen/Desktop/FEM/stdFEM/input/bar.json
+ASCII
+DATASET UNSTRUCTURED_GRID
+
+POINTS 4 float
+0. 0. 0.
+1. 0. 0.
+0.33333333 0.         0.        
+0.66666667 0.         0.        
+
+CELLS 3 9
+2 0 2
+2 2 3
+2 3 1
+
+CELL_TYPES 3
+3
+3
+3
+
+POINT_DATA 4
+VECTORS displacement float
+0. 0. 0.
+1. 0. 0.
+0.33333333 0.         0.        
+0.66666667 0.         0.        

@@ -1,0 +1,39 @@
+# vtk DataFile Version 2.0
+Results for /Users/qinxusen/Desktop/FEM/stdFEM/input/patch_test.json
+ASCII
+DATASET UNSTRUCTURED_GRID
+
+POINTS 8 float
+0. 0. 0.
+1. 0. 0.
+1. 1. 0.
+0. 1. 0.
+0.25 0.25 0.  
+0.7 0.4 0. 
+0.6 0.6 0. 
+0.3 0.7 0. 
+
+CELLS 5 25
+4 0 1 5 4
+4 5 1 2 6
+4 6 2 3 7
+4 7 3 0 4
+4 4 5 6 7
+
+CELL_TYPES 5
+9
+9
+9
+9
+9
+
+POINT_DATA 8
+VECTORS displacement float
+0. 0. 0.
+0.2 0.  0. 
+ 0.2  -0.06  0.  
+ 0.   -0.06  0.  
+ 0.05  -0.015  0.   
+ 0.14  -0.024  0.   
+ 0.12  -0.036  0.   
+ 0.06  -0.042  0.   
