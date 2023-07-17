@@ -77,7 +77,7 @@ def h_FEM(shape_class = linear, num_elems = 3,p=3, domain = (0, 1),rhs_func = rh
     return U, phi_phip, uh
 
 
-def FEM(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
+def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
     N=6
     mesh = np.linspace(domain[0], domain[1], num_elems+1)
     ori_phi_phip = {'phis': [], 'phips': []}
@@ -119,11 +119,7 @@ def FEM(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_fu
             K = assemble(K, linear_K_sub)
             F = assemble(F, linear_F_sub)
             
-    # Applying boundary condition
-    K[0, 1:] = 0.0 
-    K[-1, :-1] = 0.0
-    F[0] = BCs[0]* K[0, 0] # -= or = ??
-    F[-1] = BCs[-1] * K[-1, -1]
+    linear_num = len(F)
 
     nonlinear_phi_phip = {'phis': [], 'phips': []}
     for order in range(2, p+1):  # Non Linear
@@ -147,6 +143,13 @@ def FEM(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_fu
                     F = assemble(F, nonlinear_F_sub)
                 else:
                     pass
+                
+    # Applying boundary condition
+
+    K[0, 1:] = 0.0 
+    K[linear_num-1, :linear_num-1] = 0.0
+    F[0] = BCs[0]* K[0, 0] # -= or = ??
+    F[linear_num-1] = BCs[-1] * K[linear_num-1, linear_num-1]
 
     U = -la.solve(K, F)
     # print(F)
@@ -167,7 +170,9 @@ def FEM(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_fu
             plt.plot(x_data, U[i]*func(x_data))
         plt.legend()
         plt.show()
-    return U, phi_phip, uh
+    eigenvalues = np.linalg.eigvals(K)
+    cont_K = max(eigenvalues)/min(eigenvalues)
+    return U, phi_phip, uh, cont_K
 
 
 
