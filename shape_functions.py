@@ -3,7 +3,7 @@ import numpy as np
 import sympy as sp
 from scipy.special import roots_legendre
 import scipy.linalg as la
-from tools import *
+from tools_1D import *
 import matplotlib.pyplot as plt
 # plt.style.use('default')
 import copy
