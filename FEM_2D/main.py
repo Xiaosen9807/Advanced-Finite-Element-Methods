@@ -12,11 +12,11 @@ if __name__=='__main__':
    vertices = [[1, 0.9], [2, 1.3], [0.5, 1.7]]
    Nodes_list = []
    for i in range(len(vertices)):
-      Nodes_list.append(Node(vertices[i], i+1))
+      Nodes_list.append(Node(vertices[i], i))
       
    triangle = T3(Nodes_list)
    print(triangle.phipxs[1](x=[0.2, 0.3]))
-   print(mul(triangle.phipxs[0], triangle.phipxs[1])([0]))
+   # print(mul(triangle.phipxs[0], triangle.phipxs[1])([0]))
    print('J_det', triangle.J_det)
    print('J', np.linalg.inv(triangle.J_inv))
    
@@ -43,10 +43,10 @@ if __name__=='__main__':
 
    print(K)
 
-   nodes_coord, elements_coord = mesh(0.05, 1, 8)
+   nodes_coord, elements_coord = mesh(0.05, 0, 8)
    nodes_list = []
    eleemnt_list = []
    for i in range(len(nodes_coord)):
-      nodes_list.append(Nodes(nodes_coord, i+1))
-      
-
+      nodes_list.append(Node(nodes_coord, i+1))
+   print(len(nodes_coord))
+   

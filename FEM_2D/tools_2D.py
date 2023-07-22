@@ -5,6 +5,7 @@ import scipy.linalg as la
 import matplotlib.pyplot as plt
 # plt.style.use('default')
 import copy
+import traceback
 from shape_fns import *
 
 
@@ -76,7 +77,9 @@ class plus(operate):
                     func.scale_x[0]+=1e-10
                     func.scale_y[0]+=1e-10
                 result += func(x, y) if callable(func) else func
-            except:
+            except Exception as e:
+                traceback.print_exc()
+                print("Error: ", e)
                 result += func
         return result
         

@@ -71,6 +71,7 @@ def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
 
     # 清理
     gmsh.finalize()
+    assert len(element_types)<=3, "The mesh method is wrong, the elements have {} types".format(len(element_types))
 
     return node_coords, element_nodes
 

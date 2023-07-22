@@ -12,51 +12,65 @@ class shape_fns:
         # self.y_l = scale_y[0]
         # self.y_r = scale_y[1]
         self.p = p
+    
+    def gridnize(self, ksi, neta):
+           ksi_, neta_ = np.meshgrid(ksi, neta, indexing='ij')
+           return ksi_, neta_        
         
     def expression(self, ksi, neta): 
         return 1-ksi-neta
-    
+
     def __call__(self, x=0, y=0):
-        x = np.asarray(x)  # convert x to a numpy array if it's not already
-        y = np.asarray(y)  # convert y to a numpy array if it's not already
-        expression_vectorized = np.vectorize(self.expression, otypes=['d'])
-        return np.where((self.scale_x[0] <= x) & (x <= self.scale_x[1]) & (self.scale_y[0] <= y) & (y <= self.scale_y[1]), expression_vectorized(x, y), 0)
+        
+        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+            ksi, neta = [x, y]
+        else:
+            ksi, neta = self.gridnize(x, y)
+        return  self.expression(ksi, neta)
+        # return np.where((self.scale_x[0] <= ksi) & (ksi <= self.scale_x[1]) & (self.scale_y[0] <= neta) & (neta <= self.scale_y[1]), self.expression(ksi, neta), 0)
 
 
 class T3_phi(shape_fns):
     def expression(self, ksi, neta): 
-        if self.p == -1:
+        if self.p == 0:
              return 1-ksi-neta
-        elif self.p == 0:
-            return ksi
         elif self.p == 1:
-            return neta 
+            return ksi
+        elif self.p == 2:
+            return neta
+        else:
+            raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
+
         
 class T3_phipx(shape_fns):
     def expression(self, ksi=0, neta=0):
-        if self.p == -1:
+        if self.p == 0:
              return -1+np.zeros_like(ksi)
-        elif self.p == 0:
-            return 1+np.zeros_like(ksi)
         elif self.p == 1:
+            return 1+np.zeros_like(ksi)
+        elif self.p == 2:
             return 0+np.zeros_like(ksi)
+        else:
+            raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 
 class T3_phipy(shape_fns):
     def expression(self, ksi=0, neta=0):
-        if self.p == -1:
+        if self.p == 0:
              return  -1 +np.zeros_like(neta)
-        elif self.p == 0:
-            return 0+np.zeros_like(neta)
         elif self.p == 1:
+            return 0+np.zeros_like(neta)
+        elif self.p == 2:
             return 1+np.zeros_like(neta)
+        else:
+            raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
+
 
 
 class Node:
     def __init__(self, xy, id=0):
         self.xy = xy
         self.id=id
-
-        
+        self.value = 0
 class Element:
     def __init__(self, nodes, id=0):
        
@@ -66,8 +80,56 @@ class Element:
         self.vertices = []
         for Node in self.nodes:
             self.vertices.append(Node.xy)
+
+        self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
+        self.phixs = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
+        self.phiys = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.neta = 1
         self.ksi = 1
+
+
+    def in_element(self, x, y):
+        point = x, y
+        polygon = np.array(self.vertices)
+        n = len(polygon)
+        for i in range(n):
+            p1, p2 = polygon[i], polygon[(i + 1) % n]
+
+            if np.all(p1 == point) or np.all(p2 == point):
+                return True
+
+            if p1[1] == p2[1]:
+                if point[1] == p1[1] and min(p1[0], p2[0]) <= point[0] <= max(p1[0], p2[0]):
+                    return True
+            elif min(p1[1], p2[1]) <= point[1] < max(p1[1], p2[1]):
+                x = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0]  
+                if x == point[0]:
+                    return True
+                elif x > point[0]:
+                    count += 1
+        return count % 2 == 1
+    
+    def __call__(self, x=0, y=0):
+        
+        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+            # Deal with single numbers
+            value = 0
+            for i in range(len(self.nodes)):
+                if self.in_element(x, y):
+                    value += self.nodes[i].value * self.phis[i](x, y)
+            return value
+        else:
+            # Deal with arrays
+            x = np.asarray(x)
+            y = np.asarray(y)
+
+            value = np.zeros((len(x), len(y)))
+            for i in range(len(self.nodes)):
+                for ix, x_val in enumerate(x):
+                    for iy, y_val in enumerate(y):
+                        if self.in_element([x_val, y_val]):
+                            value[iy, ix] += self.nodes[i].value * self.phis[i](x_val, y_val)
+            return value
         
 
 class T3(Element):
@@ -75,9 +137,9 @@ class T3(Element):
         super().__init__(nodes, id)
         assert len(nodes) == 3, "The number of vertices must be 3 in T3 element"
         self.vertices_l = [[0, 0], [1, 0], [0, 1]]
-        self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(-1, 2)]
-        self.phipxs = [T3_phipx([0, 1],[0, 1], p) for p in range(-1, 2)]
-        self.phipys = [T3_phipy([0, 1],[0, 1], p) for p in range(-1, 2)]
+        self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
+        self.phipxs = [T3_phipx([0, 1],[0, 1], p) for p in range(len(self.nodes))]
+        self.phipys = [T3_phipy([0, 1],[0, 1], p) for p in range(len(self.nodes))]
 
         self.J = np.array([[self.vertices[1][0]-self.vertices[0][0], self.vertices[1][1]-self.vertices[0][1]], 
                            [self.vertices[2][0]-self.vertices[0][0], self.vertices[2][1]-self.vertices[0][1]]])
@@ -144,12 +206,35 @@ class rhs_fn(shape_fns):
 
 
         
-if __name__=='__main__':
+if __name__=="__main__":
  
-   vertices = [[0, 0], [2, 1], [0.5, 2]]
-   vertices = [[1, 0.2], [2, 1.3], [0.5, 1.7]]
-   triangle = T3(vertices)
-   print(triangle.phipxs[1](x=[0.2, 0.3]))
-   print(triangle.J_inv)
-   print(triangle.J)
-   K = np.zeros((3, 3))
+    vertices = [[0, 0], [2, 1], [0.5, 2]]
+    vertices = [[1, 0.2], [2, 1.3], [0.5, 1.7]]
+    vertices = [[0, 0], [1, 0], [0, 1]]
+    Node_list = []
+    for i in range(len(vertices)):
+        Node_list.append(Node(vertices[i], i+1))
+        
+    triangle = T3(Node_list)
+
+    t3_phi = T3_phi(0)
+
+    # ????????????
+    x0, x1 = [0, 1]
+    y0, y1 = [0, 2]
+    ksi = np.linspace(x0, x1, 100)
+    neta = np.linspace(y0, y1, 100)
+    #    ksi = 0.1
+    #    neta = 0.2
+    
+    # ??expression???????
+    output = t3_phi(ksi, neta)
+    print('output', output)
+    plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
+    plt.colorbar()
+    plt.title('Shape Function')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.show()
+
+   

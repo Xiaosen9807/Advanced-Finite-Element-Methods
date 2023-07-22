@@ -42,3 +42,41 @@ def integrate_ukf(k=0):
 
 F = integrate_ukf(k=0)
 print(F)
+
+def point_in_polygon(polygon, point):
+    count = 0
+    n = len(polygon)
+    for i in range(n):
+        p1, p2 = polygon[i], polygon[(i + 1) % n]
+        
+        # ???????
+        if np.all(p1 == point) or np.all(p2 == point):
+            return True
+
+        # ????????
+        if p1[1] == p2[1]:
+            if point[1] == p1[1] and min(p1[0], p2[0]) <= point[0] <= max(p1[0], p2[0]):
+                return True
+        # ??????????
+        elif min(p1[1], p2[1]) <= point[1] < max(p1[1], p2[1]):
+            x = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0]  # ??? x ??
+            # ??????
+            if x == point[0]:
+                return True
+            # ???????
+            elif x > point[0]:
+                count += 1
+    # ???????????? True????? False
+    return count % 2 == 1
+
+# ??????????
+A = np.array([0, 0])
+B = np.array([1, 0])
+C = np.array([1, 1])
+D = np.array([0.5, 1.5])
+E = np.array([0, 1])
+P = np.array([0, -1])
+points_list = np.array([A, B, C, D, E, P])
+
+
+print(point_in_polygon([A, B, C, D, E], P))  # True
