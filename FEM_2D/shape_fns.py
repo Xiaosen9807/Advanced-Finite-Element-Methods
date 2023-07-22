@@ -51,21 +51,23 @@ class T3_phipy(shape_fns):
             return 1+np.zeros_like(neta)
         
 class Element:
-    def __init__(self, vertices ):
-        self.vertices  = vertices 
-        self.nodes = [Node(co) for co in vertices ]
+    def __init__(self, vertices, id=0):
+        self.vertices  = vertices
+        self.id = id
+        self.nodes = [Node(vertices[i], i) for i in range(len(vertices)) ]
         self.n_nodes = len(self.nodes)
         self.neta = 1
         self.ksi = 1
         
 class Node:
-    def __init__(self, xy):
+    def __init__(self, xy, indx_l=0):
         self.x = xy[0]
         self.y = xy[1]
+        self.indx_l=indx_l
 
 class T3(Element):
-    def __init__(self, vertices ):
-        super().__init__(vertices)
+    def __init__(self, vertices, id=0):
+        super().__init__(vertices, id)
         assert len(vertices) == 3, "The number of vertices must be 3 in T3 element"
         self.vertices_l = [[0, 0], [1, 0], [0, 1]]
         self.funcs = [T3_phi([0, 1], [0, 1], p) for p in range(-1, 2)]
@@ -88,6 +90,51 @@ def jacobian(X, dN):
     print(dN)
 
     return np.linalg.inv(J), np.linalg.det(J)
+
+class exact_fn(shape_fns):
+    def __init__(self, a=20, b=20, scale_x=[0, 40], scale_y=[0, 40], dire='xx'):
+        #unit: mm
+        assert dire not in ['xx', 'yy', 'xy'], "The stress  direction should be 'xx', 'yy' or 'xy'"
+        self.dire = dire
+        self.a = a
+        self.b = b
+        self.scale_x = scale_x
+        self.scale_y = scale_y
+    def expression(self, x, y):
+        a = self.a
+        b = self.b
+        sigma_0 = 50 #Mpa
+        lambda_ = 1/2*(x**2+y**2-a**2-b**2+((x**2+y**2-a**2+b**2)**2+4*(a**2-b**2) * y**2)**0.5)
+
+                # Define rho_a and rho_b
+        rho_a = a /np.sqrt(a**2 + lambda_)
+        rho_b = b / np.sqrt(b**2 + lambda_)
+
+        # Define n_x and n_y
+        n_x = x * (b**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
+        n_y = y * (a**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
+
+        # Define H_1 to H_5
+        H_1 = (a**2 * rho_a**2 * rho_b**2 + b**2 * rho_a**2 + a * b * rho_a * rho_b) / (a * rho_b + b * rho_a)**2 - rho_b**2 * n_x**2 - rho_a**2 * n_y**2 + (5 * rho_a**2 + 5 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2 * n_y**2
+        H_2 = (rho_b * a * (a * rho_b + b * rho_a + 2 * b * rho_a * rho_b**2 + a * rho_b**3)) / (a * rho_b + b * rho_a)**2 + n_y**2 * (2 - 6 * rho_b**2 + (rho_a**2 + 9 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
+        H_3 = n_x * n_y * (1 - 3 * rho_b**2 + (3 * rho_a**2 + 7 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
+        H_4 = (rho_a * b * (a * rho_b + b * rho_a + 2 * a * rho_a**2 * rho_b + b * rho_a**3)) / (a * rho_b + b * rho_a)**2 + n_x**2 * (2 - 6 * rho_a**2 + (9 * rho_a**2 + rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
+        H_5 = n_x * n_y * (1 - 3 * rho_a**2 + (7 * rho_a**2 + 3 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
+
+        if self.dire == 'xx':
+            return  sigma_0*(1-rho_a*rho_b*(H_1/2 -(b/a+0.5)*H_4))
+        elif self.dire == 'yy':
+            return sigma_0*(-rho_a*rho_b*(H_2/2 -(b/a+0.5)*H_1))
+        elif self.dire == 'xy':
+            return sigma_0*(-rho_a*rho_b*(H_3/2 -(b/a+0.5)*H_5))
+        
+class rhs_fn(shape_fns):
+    def __init__(self, scale_x=[0, 40], scale_y=[0, 40]):
+        self.scale_x = scale_x
+        self.scale_y = scale_y
+    def expression(self, x=0, y=0):
+        pass
+
 
 
 

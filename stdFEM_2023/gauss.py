@@ -82,3 +82,9 @@ def tri_3gp():
     xi = [(2/3., 1/6.), (1/6., 1/6.), (1/6., 2/3.)]
     wgt  = [1/6., 1/6., 1/6.]
     return Quadrature(wgt, xi)
+
+if __name__=='__main__':
+    q = Quadrature(wgt=0.5, xi=1.0)
+    print(q.wgt)  # prints: 0.5
+    print(q.xi)   # prints: 1.0
+    print(q)

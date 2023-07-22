@@ -5,7 +5,7 @@ from shape_fns import *
 from scipy.special import roots_legendre
 
 
-if __name__ =='__main__':
+if __name__=='__main__':
  
    vertices = [[1, 0.9], [2, 1.3], [0.5, 1.7]]
    triangle = T3(vertices)
@@ -16,12 +16,14 @@ if __name__ =='__main__':
    
    x, w = roots_legendre(3)
    print(x, w)
-   
-   K = np.zeros((3, 3))
-   invers_J = triangle.J_inv*triangle.J_det
 
-   for i in range(3):
-       for j in range(3):
+   num_shape_fns = len(triangle.phixs)
+   K = np.zeros((num_shape_fns, num_shape_fns))
+   invers_J = triangle.J_inv*triangle.J_det
+   F = np.zeros(num_shape_fns)
+   for i in range(num_shape_fns):
+       
+       for j in range(num_shape_fns):
            pu_pxi = plus(mul(invers_J[0][0], triangle.phipxs[i]),
                         mul(invers_J[0][1], triangle.phipys[i]))
            pu_pxj = plus(mul(invers_J[0][0], triangle.phipxs[j]),
@@ -30,7 +32,8 @@ if __name__ =='__main__':
                         mul(invers_J[1][1], triangle.phipys[i]))
            pu_pyj = plus(mul(invers_J[1][0], triangle.phipxs[j]),
                         mul(invers_J[1][1], triangle.phipys[j]))
-
            this_funs = plus(mul(pu_pxi, pu_pxj), mul(pu_pyi, pu_pyj))
            K[i, j] = G_integrate_2D(this_funs)
-   print(K)
+
+    print(K)
+   

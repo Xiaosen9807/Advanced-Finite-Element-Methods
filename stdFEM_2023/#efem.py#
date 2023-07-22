@@ -17,12 +17,10 @@ try:
         nodes = np.array(data['nodes'])         # nodes array to numpy array
         elems = np.array(data['elements'])      # elements array to numpy array
         material = tuple(data['material'])      # material data
-        print('material', material)
         bcs = data['boundary']                  # prescribed boundary conditions
         load = data['load']                     # prescribed loads
         nnodes, dpn = nodes.shape               # node count and dofs per node
         nelems, etype = elems.shape             # element count and element type
-        print(elems.shape)
         dofs = dpn*nnodes                       # total number of dofs
         gauss = quadrature(etype,data['gauss']) # quadrature data structure
 
