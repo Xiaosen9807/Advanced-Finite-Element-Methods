@@ -1,0 +1,285 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 195,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 367,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "type[<pygmsh Ball object (OCC), ID 1>]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "64781b8edae948b99706214736363a6f",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Widget(value=\"<iframe src='http://localhost:51132/index.html?ui=P_0x3635455e0_42&reconnect=auto' style='width:…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import pygmsh\n",
+    "import pyvista as pv\n",
+    " \n",
+    "# ellpsoid with holes\n",
+    "\n",
+    "with pygmsh.occ.Geometry() as geom:\n",
+    "    geom.characteristic_length_max = .1\n",
+    "    ellipsoid = geom.add_ellipsoid([0.0, 0.0, 0.0], [1.0, 0.7, 0.5])\n",
+    "    print(type[ellipsoid])\n",
+    "    cylinders = [\n",
+    "        geom.add_cylinder([-1.0, 0.0, 0.0], [2.0, 0.0, 0.0], 0.3),\n",
+    "        geom.add_cylinder([0.0, -1.0, 0.0], [0.0, 2.0, 0.0], 0.3),\n",
+    "        geom.add_cylinder([0.0, 0.0, -1.0], [0.0, 0.0, 2.0], 0.3),\n",
+    "    ]\n",
+    "    geom.boolean_difference(ellipsoid, geom.boolean_union(cylinders))\n",
+    "    \n",
+    "    mesh = geom.generate_mesh()\n",
+    " \n",
+    "pl = pv.Plotter() # Plotter class 实例化\n",
+    "pl.add_mesh(mesh, show_edges=True, color='white') # 绘制图像\n",
+    "pl.add_points(mesh.points, color='red',point_size=5) # 标明红色点\n",
+    "pl.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 386,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "3576bd3728ff46db86b88b03e1dda222",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Widget(value=\"<iframe src='http://localhost:51132/index.html?ui=P_0x2ef23f790_56&reconnect=auto' style='width:…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import pygmsh\n",
+    "import pyvista as pv\n",
+    " \n",
+    "# ellpsoid with holes\n",
+    "\n",
+    "with pygmsh.occ.Geometry() as geom:\n",
+    "    geom.characteristic_length_max = 8\n",
+    "    a_b = 0.05\n",
+    "    b = 20\n",
+    "    a = a_b*b\n",
+    "    ellipsoid = geom.add_ellipsoid([0.0, 0.0, 0.0], [b, a, 50])\n",
+    "    rectangle = geom.add_rectangle([0, 0, 0], 40, 40)\n",
+    "    # print(type[ellipsoid])\n",
+    "\n",
+    "    geom.boolean_difference(rectangle , ellipsoid)\n",
+    "    \n",
+    "    mesh = geom.generate_mesh()\n",
+    " \n",
+    "pl = pv.Plotter() # Plotter class 实例化\n",
+    "pl.add_mesh(mesh, show_edges=True, color='white') # 绘制图像\n",
+    "pl.add_points(mesh.points, color='red',point_size=5) # 标明红色点\n",
+    "pl.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 416,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[ 1  3 15]\n",
+      "[array([ 1, 10, 10,  6,  6,  9,  9,  7,  7,  8,  8,  2,  3, 15, 15, 11, 11,\n",
+      "       14, 14, 12, 12, 13, 13,  2,  4, 21, 21, 16, 16, 19, 19, 17, 17, 20,\n",
+      "       20, 18, 18, 22, 22,  3,  5, 28, 28, 23, 23, 26, 26, 24, 24, 29, 29,\n",
+      "       25, 25, 27, 27,  4,  1, 31, 31, 30, 30, 32, 32,  5], dtype=uint64), array([40, 45, 46, 42, 41, 42, 46, 43, 36, 43, 46, 44, 38, 44, 46, 45, 40,\n",
+      "       42, 50, 47, 39, 47, 50, 48, 35, 48, 50, 49, 41, 49, 50, 42, 12, 13,\n",
+      "       53, 51, 37, 51, 53, 52,  7, 52, 53,  8,  2,  8, 53, 13,  1, 31, 56,\n",
+      "       54, 38, 54, 56, 44, 36, 44, 56, 55, 30, 55, 56, 31, 37, 59, 60, 57,\n",
+      "       34, 57, 60, 58, 39, 58, 60, 47, 40, 47, 60, 59, 35, 62, 63, 48, 39,\n",
+      "       48, 63, 61, 17, 61, 63, 19, 16, 19, 63, 62, 41, 43, 66, 64, 24, 64,\n",
+      "       66, 26, 23, 26, 66, 65, 36, 65, 66, 43, 37, 57, 68, 51, 12, 51, 68,\n",
+      "       14, 11, 14, 68, 67, 34, 67, 68, 57, 34, 58, 70, 69, 18, 69, 70, 20,\n",
+      "       17, 20, 70, 61, 39, 61, 70, 58, 16, 62, 72, 21,  4, 21, 72, 27, 25,\n",
+      "       27, 72, 71, 35, 71, 72, 62, 37, 52, 75, 73, 33, 73, 75, 74,  6, 74,\n",
+      "       75,  9,  7,  9, 75, 52, 36, 55, 76, 65, 23, 65, 76, 28,  5, 28, 76,\n",
+      "       32, 30, 32, 76, 55, 34, 69, 77, 67, 11, 67, 77, 15,  3, 15, 77, 22,\n",
+      "       18, 22, 77, 69, 37, 73, 79, 59, 40, 59, 79, 45, 38, 45, 79, 78, 33,\n",
+      "       78, 79, 73, 24, 29, 80, 64, 41, 64, 80, 49, 35, 49, 80, 71, 25, 71,\n",
+      "       80, 29,  1, 54, 81, 10,  6, 10, 81, 74, 33, 74, 81, 78, 38, 78, 81,\n",
+      "       54], dtype=uint64), array([1, 2, 3, 4, 5], dtype=uint64)]\n"
+     ]
+    }
+   ],
+   "source": [
+    "import gmsh\n",
+    "\n",
+    "def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):\n",
+    "        \n",
+    "    # 初始化gmsh\n",
+    "    gmsh.initialize()\n",
+    "    gmsh.model.add('2D shape')\n",
+    "\n",
+    "    # 创建正方形\n",
+    "    rect_tag = gmsh.model.occ.addRectangle(0, 0, 0, 40, 40)\n",
+    "\n",
+    "    b = 20\n",
+    "    a = b*a_b\n",
+    "    # 创建椭圆\n",
+    "    ellipse_tag = gmsh.model.occ.addEllipse(0, 0, 0, b, a)\n",
+    "\n",
+    "    # 创建一个椭圆的线循环\n",
+    "    ellipse_loop = gmsh.model.occ.addCurveLoop([ellipse_tag])\n",
+    "\n",
+    "    # 创建一个椭圆面\n",
+    "    ellipse_surface = gmsh.model.occ.addPlaneSurface([ellipse_loop])\n",
+    "\n",
+    "    # 对椭圆进行裁剪\n",
+    "    cut_tag, _ = gmsh.model.occ.cut([(2, rect_tag)], [(2, ellipse_surface)])\n",
+    "\n",
+    "    gmsh.option.setNumber(\"General.Terminal\", 0)\n",
+    "    # gmsh.option.setNumber(\"Mesh.RecombinationAlgorithm\", 1)\n",
+    "    gmsh.option.setNumber(\"Mesh.Algorithm\",8)\n",
+    "\n",
+    "    # gmsh.option.setNumber(\"Mesh.ElementOrder\", 2)\n",
+    "    gmsh.option.setNumber(\"Mesh.RecombinationAlgorithm\", 3)\n",
+    "    gmsh.option.setNumber(\"Mesh.RecombineAll\", mesh_shape)\n",
+    "    gmsh.option.setNumber(\"Mesh.CharacteristicLengthMin\", mesh_size)\n",
+    "\n",
+    "\n",
+    "    # 同步模型\n",
+    "    gmsh.model.occ.synchronize()\n",
+    "\n",
+    "    # 生成2D网格\n",
+    "    gmsh.model.mesh.generate(2)\n",
+    "    \n",
+    "    # 保存模型和网格\n",
+    "    gmsh.write('2Dshape.msh')\n",
+    "    \n",
+    "    # 获取所有的节点信息（节点标签，节点坐标和参数化坐标）\n",
+    "    node_tags, node_coords, parametric_coords = gmsh.model.mesh.getNodes()\n",
+    "\n",
+    "    # 获取所有的单元信息（元素类型，元素标签和节点连接性）\n",
+    "    element_types, element_tags, element_nodes = gmsh.model.mesh.getElements()\n",
+    "\n",
+    "    # 因为getNodes和getElements返回的数据都是flattened arrays（扁平化数组），我们需要根据节点或单元的维度来reshape数组。\n",
+    "    node_coords = node_coords.reshape(-1, 3)[:, :2]\n",
+    "    # print(node_coords)\n",
+    "    print(element_types)\n",
+    "    # print(len(element_tags[1]))\n",
+    "    print(element_nodes )\n",
+    "\n",
+    "    if show:\n",
+    "        gmsh.fltk.run()\n",
+    "    \n",
+    "    # 清理\n",
+    "    gmsh.finalize()\n",
+    "\n",
+    "mesh(a_b=0.5, mesh_shape=1, mesh_size=4, show=True)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 430,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "module 'pygmsh' has no attribute 'built_in'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn[430], line 23\u001b[0m\n\u001b[1;32m     20\u001b[0m     \u001b[39massert\u001b[39;00m \u001b[39mlen\u001b[39m(mesh\u001b[39m.\u001b[39mcells_dict[\u001b[39m\"\u001b[39m\u001b[39mtetra\u001b[39m\u001b[39m\"\u001b[39m]) \u001b[39m==\u001b[39m ref_tetras\n\u001b[1;32m     22\u001b[0m     \u001b[39mreturn\u001b[39;00m mesh\n\u001b[0;32m---> 23\u001b[0m test()\n",
+      "Cell \u001b[0;32mIn[430], line 8\u001b[0m, in \u001b[0;36mtest\u001b[0;34m()\u001b[0m\n\u001b[1;32m      6\u001b[0m y_layers \u001b[39m=\u001b[39m \u001b[39m5\u001b[39m\n\u001b[1;32m      7\u001b[0m z_layers \u001b[39m=\u001b[39m \u001b[39m3\u001b[39m\n\u001b[0;32m----> 8\u001b[0m geom \u001b[39m=\u001b[39m pygmsh\u001b[39m.\u001b[39;49mbuilt_in\u001b[39m.\u001b[39mGeometry()\n\u001b[1;32m      9\u001b[0m p \u001b[39m=\u001b[39m geom\u001b[39m.\u001b[39madd_point([\u001b[39m0\u001b[39m, \u001b[39m0\u001b[39m, \u001b[39m0\u001b[39m], \u001b[39m1\u001b[39m)\n\u001b[1;32m     10\u001b[0m _, l, _ \u001b[39m=\u001b[39m geom\u001b[39m.\u001b[39mextrude(p, [x, \u001b[39m0\u001b[39m, \u001b[39m0\u001b[39m], num_layers\u001b[39m=\u001b[39mx_layers)\n",
+      "\u001b[0;31mAttributeError\u001b[0m: module 'pygmsh' has no attribute 'built_in'"
+     ]
+    },
+    {
+     "ename": "",
+     "evalue": "",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31mThe Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter <a href='command:jupyter.viewOutput'>log</a> for further details."
+     ]
+    }
+   ],
+   "source": [
+    "def test():\n",
+    "    x = 5\n",
+    "    y = 4\n",
+    "    z = 3\n",
+    "    x_layers = 10\n",
+    "    y_layers = 5\n",
+    "    z_layers = 3\n",
+    "    geom = pygmsh.built_in.Geometry()\n",
+    "    p = geom.add_point([0, 0, 0], 1)\n",
+    "    _, l, _ = geom.extrude(p, [x, 0, 0], num_layers=x_layers)\n",
+    "    _, s, _ = geom.extrude(l, [0, y, 0], num_layers=y_layers)\n",
+    "    geom.extrude(s, [0, 0, z], num_layers=z_layers)\n",
+    "    mesh = pygmsh.generate_mesh(geom)\n",
+    "\n",
+    "    ref_vol = x * y * zkj\n",
+    "\n",
+    "\n",
+    "    # Each grid-cell from layered extrusion will result in 6 tetrahedrons.\n",
+    "    ref_tetras = 6 * x_layers * y_layers * z_layers\n",
+    "    assert len(mesh.cells_dict[\"tetra\"]) == ref_tetras\n",
+    "\n",
+    "    return mesh\n",
+    "test()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "FEM",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.16"
+  },
+  "orig_nbformat": 4
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

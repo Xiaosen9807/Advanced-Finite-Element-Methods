@@ -49,33 +49,38 @@ class T3_phipy(shape_fns):
             return 0+np.zeros_like(neta)
         elif self.p == 1:
             return 1+np.zeros_like(neta)
+
+
+class Node:
+    def __init__(self, xy, id=0):
+        self.xy = xy
+        self.id=id
+
         
 class Element:
-    def __init__(self, vertices, id=0):
-        self.vertices  = vertices
+    def __init__(self, nodes, id=0):
+       
         self.id = id
-        self.nodes = [Node(vertices[i], i) for i in range(len(vertices)) ]
+        self.nodes = nodes
         self.n_nodes = len(self.nodes)
+        self.vertices = []
+        for Node in self.nodes:
+            self.vertices.append(Node.xy)
         self.neta = 1
         self.ksi = 1
         
-class Node:
-    def __init__(self, xy, indx_l=0):
-        self.x = xy[0]
-        self.y = xy[1]
-        self.indx_l=indx_l
 
 class T3(Element):
-    def __init__(self, vertices, id=0):
-        super().__init__(vertices, id)
-        assert len(vertices) == 3, "The number of vertices must be 3 in T3 element"
+    def __init__(self, nodes, id=0):
+        super().__init__(nodes, id)
+        assert len(nodes) == 3, "The number of vertices must be 3 in T3 element"
         self.vertices_l = [[0, 0], [1, 0], [0, 1]]
-        self.funcs = [T3_phi([0, 1], [0, 1], p) for p in range(-1, 2)]
+        self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(-1, 2)]
         self.phipxs = [T3_phipx([0, 1],[0, 1], p) for p in range(-1, 2)]
         self.phipys = [T3_phipy([0, 1],[0, 1], p) for p in range(-1, 2)]
 
-        self.J = np.array([[vertices[1][0]-vertices[0][0], vertices[1][1]-vertices[0][1]], 
-                           [vertices[2][0]-vertices[0][0], vertices[2][1]-vertices[0][1]]])
+        self.J = np.array([[self.vertices[1][0]-self.vertices[0][0], self.vertices[1][1]-self.vertices[0][1]], 
+                           [self.vertices[2][0]-self.vertices[0][0], self.vertices[2][1]-self.vertices[0][1]]])
         self.J_inv = np.linalg.inv(self.J)
         self.J_det = np.linalg.det(self.J)
         

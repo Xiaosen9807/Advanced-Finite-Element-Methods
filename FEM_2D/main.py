@@ -2,13 +2,19 @@ import numpy as np
 import sympy as sp
 from tools_2D import *
 from shape_fns import *
+from Mesh import mesh
+
 from scipy.special import roots_legendre
 
 
 if __name__=='__main__':
  
    vertices = [[1, 0.9], [2, 1.3], [0.5, 1.7]]
-   triangle = T3(vertices)
+   Nodes_list = []
+   for i in range(len(vertices)):
+      Nodes_list.append(Node(vertices[i], i+1))
+      
+   triangle = T3(Nodes_list)
    print(triangle.phipxs[1](x=[0.2, 0.3]))
    print(mul(triangle.phipxs[0], triangle.phipxs[1])([0]))
    print('J_det', triangle.J_det)
@@ -17,7 +23,7 @@ if __name__=='__main__':
    x, w = roots_legendre(3)
    print(x, w)
 
-   num_shape_fns = len(triangle.phixs)
+   num_shape_fns = len(triangle.phis)
    K = np.zeros((num_shape_fns, num_shape_fns))
    invers_J = triangle.J_inv*triangle.J_det
    F = np.zeros(num_shape_fns)
@@ -35,5 +41,12 @@ if __name__=='__main__':
            this_funs = plus(mul(pu_pxi, pu_pxj), mul(pu_pyi, pu_pyj))
            K[i, j] = G_integrate_2D(this_funs)
 
-    print(K)
-   
+   print(K)
+
+   nodes_coord, elements_coord = mesh(0.05, 1, 8)
+   nodes_list = []
+   eleemnt_list = []
+   for i in range(len(nodes_coord)):
+      nodes_list.append(Nodes(nodes_coord, i+1))
+      
+
