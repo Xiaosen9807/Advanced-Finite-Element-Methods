@@ -96,7 +96,7 @@ class Q4_phipy(shape_fns):
         if self.p == 0:
             return (xi - 1)/4
         elif self.p == 1:
-            return (xi - 1)/4
+            return -(xi - 1)/4
         elif self.p == 2:
             return (1 + xi)/4
         elif self.p == 3:

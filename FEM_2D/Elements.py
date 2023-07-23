@@ -20,7 +20,12 @@ def cal_K(element):
             pu_pyj = plus(mul(invers_J[1][0], element.phipxs[j]),
                          mul(invers_J[1][1], element.phipys[j]))
             this_funs = plus(mul(pu_pxi, pu_pxj), mul(pu_pyi, pu_pyj))
-            K[i, j] = G_integrate_2D(this_funs)
+            scale_x = this_funs.scale_x
+            scale_y = this_funs.scale_y
+            K_value= G_integrate_2D(this_funs, N=3, scale_x=scale_x, scale_y=scale_y)
+            if abs(K_value)>1e-10:
+                K[i, j] = K_value
+    
     return K
 
 class Node:
@@ -36,11 +41,12 @@ class Element:
         self.id = id
         self.nodes = nodes
         self.n_nodes = len(self.nodes)
-        self.vertices = []
+        vertices = []
         self.node_id = []
         for Node in self.nodes:
-            self.vertices.append(Node.xy)
+            vertices.append(Node.xy)
             self.node_id.append(Node.id)
+        self.vertices = np.array(vertices)
 
         self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phixs = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
@@ -115,12 +121,18 @@ class Q4(Element):
         super().__init__(nodes, id)
         assert len(self.nodes)==4, "The number of nodes must be 4 in Q4 element, rather than {}".format(len(self.nodes))
         
-        self.phis = [Q4_phi([1, 1], [1, 1], p) for p in range(len(self.nodes))]
-        self.phipxs = [Q4_phipx([1, 1], [1, 1], p) for p in range(len(self.nodes))]
-        self.phipys = [Q4_phipy([1, 1], [1, 1], p) for p in range(len(self.nodes))]
+        self.phis = [Q4_phi([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
+        self.phipxs = [Q4_phipx([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
+        self.phipys = [Q4_phipy([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
         self.eta = 1
         self.xi = 1
-        self.K = np.zeros((self.n_nodes, self.n_nodes))
+        x = self.vertices[:, 0]
+        y = self.vertices[:, 1]
+        self.J = np.array([[((x[1]-x[0])*(1-self.eta)+(x[2]-x[3])*(1+self.eta))/4, ((y[1]-y[0])*(1-self.eta)+(y[2]-y[3])*(1+self.eta))/4 ], [((x[2]-x[1])*(1+self.xi)+(x[3]-x[0])*(1-self.xi))/4, ((y[2]-y[1])*(1+self.xi)+(y[3]-y[1])*(1-self.xi))/4]]) # http://www.ce.memphis.edu/7111/notes/class_notes/chapter_03c_slides.pdf
+        self.J_inv = np.linalg.inv(self.J)
+        self.J_det = np.linalg.det(self.J)
+        self.K = cal_K(self) 
+
         
 # compute Jacobian matrix
 def jacobian(X, dN):
@@ -134,19 +146,30 @@ def jacobian(X, dN):
 
     return np.linalg.inv(J), np.linalg.det(J)
 if __name__=="__main__":
-    vertices = [[0, 0], [2, 1], [0.5, 2]]
-    vertices = [[1, 0.2], [2, 1.3], [0.5, 1.7]]
-    vertices = [[0, 0], [1, 0], [0, 1]]
-    Node_list = []
-    for i in range(len(vertices)):
-        Node_list.append(Node(vertices[i], i+1))
-        
-    triangle = T3(Node_list)
+    vertices_T3 = [[0, 0], [2, 1], [0.5, 2]]
+    vertices_T3 = [[16.45327476, 25.20273424], [23.90255057, 19.62681142], [24.7911839 , 27.45556408]]
+    # vertices_T3 = [[1, 0.2], [2, 1.3], [0.5, 1.7]]
+    vertices_T3 = [[0, 0], [1, 0], [0, 1]]
+    
+    vertices_Q4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+    # vertices_Q4 = [[1, 1], [2, 1], [3, 2], [2, 2]]
+    # vertices_Q4 = [[1, 1], [2., 1], [2.5, 2.5], [1., 2]]
 
+    Node_list_T3 = []
+    for i in range(len(vertices_T3)):
+        Node_list_T3.append(Node(vertices_T3[i], i+1))
+    Node_list_Q4 = []
+    for i in range(len(vertices_Q4)):
+        Node_list_Q4.append(Node(vertices_Q4[i], i+1))
+    triangle = T3(Node_list_T3)
+    print(triangle.K)
+    Q4_element = Q4(Node_list_Q4)
+    print(Q4_element.K)
     t3_phi = T3_phi(0)
+    
 
     # ????????????
-    x0, x1 = [0, 1]
+    x0, x1 = [0, 2]
     y0, y1 = [0, 2]
     xi = np.linspace(x0, x1, 100)
     eta = np.linspace(y0, y1, 100)
@@ -161,6 +184,7 @@ if __name__=="__main__":
     plt.title('Shape Function')
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.show()
+    # plt.show()
+    
 
  

@@ -80,3 +80,19 @@ points_list = np.array([A, B, C, D, E, P])
 
 
 print(point_in_polygon([A, B, C, D, E], P))  # True
+import numpy as np
+
+# ?????????
+import sympy as sp
+
+x1, x2, x3, x4, y1, y2, y3, y4, eta, xi = sp.symbols('x1, x2, x3, x4, y1, y2, y3, y4, eta, xi')
+X = np.array([x1, x2, x3, x4])
+Y = np.array([y1, y2, y3, y4])
+
+# ??Q4????????ksi?eta????
+dN_dksi = np.array([-0.25*(1-eta), 0.25*(1-eta), 0.25*(1+eta), -0.25*(1+eta)])
+dN_deta = np.array([-0.25*(1-xi), -0.25*(1+xi), 0.25*(1+xi), 0.25*(1-xi)])
+
+# ??Jacobian??
+J = np.array([[np.dot(dN_dksi, X), np.dot(dN_deta, X)], 
+              [np.dot(dN_dksi, Y), np.dot(dN_deta, Y)]])

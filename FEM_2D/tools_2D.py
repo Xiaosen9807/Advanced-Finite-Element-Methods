@@ -11,16 +11,16 @@ from shape_fns import *
 
 
 
-def G_integrate_2D(u, N=3, scale = [0,1]):
+def G_integrate_2D(u, N=3, scale_x = [0,1], scale_y = [0, 1]):
     
-    a , b = scale # Projection from [-1, 1] to [1, 1]
-    
+    ax, bx = scale_x # Projection from [-1, 1] to scale_x
+    ay, by = scale_y # Projection from [-1, 1] to scale_y
     x, wx = roots_legendre(N)
     y, wy = roots_legendre(N)
-    xp = x*(b-a)/2+(b+a)/2
-    wxp = wx*(b-a)/2
-    yp = y*(b-a)/2+(b+a)/2
-    wyp = wy*(b-a)/2
+    xp = x*(bx-ax)/2+(bx+ax)/2
+    wxp = wx*(bx-ax)/2
+    yp = y*(by-ay)/2+(by+ay)/2
+    wyp = wy*(by-ay)/2
     integral = 0.0
     for i in range(N):
         for j in range(N):
