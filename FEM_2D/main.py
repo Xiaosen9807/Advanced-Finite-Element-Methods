@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 from tools_2D import *
 from shape_fns import *
+from Elements import *
 from Mesh import mesh
 
 from scipy.special import roots_legendre
@@ -42,11 +43,37 @@ if __name__=='__main__':
            K[i, j] = G_integrate_2D(this_funs)
 
    print(K)
+   print(triangle.K)
 
-   nodes_coord, elements_coord = mesh(0.05, 0, 8)
+   nodes_coord,  element_nodes = mesh(0.05, 0, 10)
    nodes_list = []
-   eleemnt_list = []
+   element_list = []
    for i in range(len(nodes_coord)):
-      nodes_list.append(Node(nodes_coord, i+1))
-   print(len(nodes_coord))
-   
+      nodes_list.append(Node(nodes_coord[i], i))
+   element_nodes = element_nodes.reshape(-1, 3)
+
+
+   for ele_lst in element_nodes:
+      this_nodes = [node for id in ele_lst for node in nodes_list if node.id == id]
+      element_list.append(T3(this_nodes))
+   print(len(nodes_list))
+   glo_K = np.zeros((len(nodes_list), len(nodes_list)))
+
+   for elem in element_list:
+      loc_K = elem.K
+      # print(loc_K)
+      for i in range(len(loc_K)):
+         for j in range(len(loc_K)):
+            node_i = elem.nodes[i]
+            node_j = elem.nodes[j]
+            # print(node_i.id, node_j.id)
+            glo_K[node_i.id][node_j.id] += loc_K[i][j]
+   np.set_printoptions(precision=2, suppress=True)
+   glo_K[np.abs(glo_K) < 1e-5] = 0
+   print(glo_K[5:10, 5:10])
+   num_zeros = np.count_nonzero(glo_K == 0)
+   print(glo_K.size-num_zeros)
+   print(element_nodes.size)
+      
+   print(element_list[0].K)
+   print(element_list[0].node_id)

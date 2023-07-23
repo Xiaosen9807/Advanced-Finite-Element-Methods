@@ -55,6 +55,7 @@ def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
 
     # 获取所有的节点信息（节点标签，节点坐标和参数化坐标）
     node_tags, node_coords, parametric_coords = gmsh.model.mesh.getNodes()
+    # print(node_tags)
 
     # 获取所有的单元信息（元素类型，元素标签和节点连接性）
     element_types, element_tags, element_nodes = gmsh.model.mesh.getElements()
@@ -73,11 +74,15 @@ def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
     gmsh.finalize()
     assert len(element_types)<=3, "The mesh method is wrong, the elements have {} types".format(len(element_types))
 
-    return node_coords, element_nodes
+    return node_coords, element_nodes[1]-1
 
 if __name__=='__main__':
-   node_coords, element_nodes =  mesh(a_b=0.5, mesh_shape=1, mesh_size=4, show=False)
+   node_coords, element_nodes =  mesh(a_b=0.05, mesh_shape=0, mesh_size=8, show=False)
    Nodes_list = []
    for i in range(len(node_coords)):
        Nodes_list.append(Node(xy=node_coords[i],id=i+1))
+   print(len(Nodes_list))
+   print(len(element_nodes))
+   print(element_nodes)
+   print()
        
