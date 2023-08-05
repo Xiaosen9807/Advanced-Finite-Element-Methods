@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tools_2D import *
 from shape_fns import *
-
+from Elements import *
+import sys
 
 a_b=0.5
 mesh_shape=1
@@ -11,7 +12,7 @@ mesh_size=10
 show=True
 
 
-def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
+def create_mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
         
     # 初始化gmsh
     gmsh.initialize()
@@ -55,7 +56,7 @@ def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
 
     # 获取所有的节点信息（节点标签，节点坐标和参数化坐标）
     node_tags, node_coords, parametric_coords = gmsh.model.mesh.getNodes()
-    # print(node_tags)
+    print(node_tags)
 
     # 获取所有的单元信息（元素类型，元素标签和节点连接性）
     element_types, element_tags, element_nodes = gmsh.model.mesh.getElements()
@@ -74,15 +75,71 @@ def mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
     gmsh.finalize()
     assert len(element_types)<=3, "The mesh method is wrong, the elements have {} types".format(len(element_types))
 
-    return node_coords, element_nodes[1]-1
+    return node_coords, element_nodes[1]-1 
+
+def in_ellipse(xy, a, b):
+    x = xy[0]
+    y = xy[1]
+    return (x/b)**2 + (y/a)**2 <= 1+1e-3
+
+def inden_nodes(node_coords, a_b):
+    b=20
+    a = b*a_b
+    resiual = 1e-3
+    Node_list = []
+    for i in range(len(node_coords)):
+        Node_list.append(Node(xy=node_coords[i],id=i))
+
+    for i in range(len(Node_list)):
+        # Check ellipse node
+        if in_ellipse(Node_list[i].xy, a, b):
+            Node_list[i].type = 'ellipse'
+        # Check left edge
+        if abs(Node_list[i].xy[0]-0)<=resiual:
+            if abs(Node_list[i].xy[1] - a) <= resiual:
+                Node_list[i].type ='lbc'
+            else:
+                Node_list[i].type = 'le'
+        # Check right edge
+        elif abs(Node_list[i].xy[0] - 40 )<=resiual:
+            Node_list[i].type = 're'
+        # Check bottom edge
+        if abs(Node_list[i].xy[1]-0) <= resiual:
+            print(i, Node_list[i].xy)
+            # sys.exit(0)
+            if abs(Node_list[i].xy[0]-b) <= resiual:
+                Node_list[i].type='blc'
+            elif Node_list[i].type=='re':
+                Node_list[i].type = 'rbc'
+            else:
+                Node_list[i].type = 'be'
+
+        if abs(Node_list[i].xy[1]-40)<=resiual:
+            if Node_list[i].type=='le':
+                Node_list[i].type ='ltc'
+            else:
+                Node_list[i].type='rtc'
+    return Node_list
 
 if __name__=='__main__':
-   node_coords, element_nodes =  mesh(a_b=0.05, mesh_shape=0, mesh_size=8, show=False)
-   Nodes_list = []
-   for i in range(len(node_coords)):
-       Nodes_list.append(Node(xy=node_coords[i],id=i+1))
-   print(len(Nodes_list))
-   print(len(element_nodes))
-   print(element_nodes)
-   print()
-       
+    a_b = 0.5
+    node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=0, mesh_size=10, show=False)
+    Nodes_list = inden_nodes(node_coords, a_b)
+
+
+        
+
+    print(len(Nodes_list))
+    print(len(element_nodes))
+    print(element_nodes)
+    # print(im=esh_ori.getNodes())
+    plt.scatter(node_coords[:, 0], node_coords[:, 1])
+    for node in Nodes_list:
+        print(node.id, node.xy, node.type)
+    for (x, y), node in zip(node_coords, Nodes_list):
+            # 在指定的坐标处显示文本
+            plt.text(x, y, node.id) 
+
+    # 显示图形
+   # plt.show()
+

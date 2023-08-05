@@ -7,6 +7,7 @@ from Mesh import mesh
 
 from scipy.special import roots_legendre
 
+def identi_nodes(nodes_coord, )
 
 if __name__=='__main__':
  
@@ -17,7 +18,7 @@ if __name__=='__main__':
       
    triangle = T3(Nodes_list)
    print(triangle.phipxs[1](x=[0.2, 0.3]))
-   # print(mul(triangle.phipxs[0], triangle.phipxs[1])([0]))
+   # print(mul(triangle.ihiixs[0], triangle.phipxs[1])([0]))
    print('J_det', triangle.J_det)
    print('J', np.linalg.inv(triangle.J_inv))
    

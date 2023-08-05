@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
 
+
 class shape_fns:
     def __init__(self, scale_x = [0, 1], scale_y = [0, 1], p=0):
         self.scale_x = scale_x
@@ -32,11 +33,11 @@ class shape_fns:
 class T3_phi(shape_fns):
     def expression(self, xi, eta): 
         if self.p == 0:
-             return 1-xi-eta
+             return xi 
         elif self.p == 1:
-            return xi
-        elif self.p == 2:
             return eta
+        elif self.p == 2:
+            return 1-xi-eta
         else:
             raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 
@@ -44,22 +45,22 @@ class T3_phi(shape_fns):
 class T3_phipx(shape_fns):
     def expression(self, xi=0, eta=0):
         if self.p == 0:
-             return -1+np.zeros_like(xi)
+             return 1+np.zeros_like(xi)
         elif self.p == 1:
-            return 1+np.zeros_like(xi)
-        elif self.p == 2:
             return 0+np.zeros_like(xi)
+        elif self.p == 2:
+            return -1+np.zeros_like(xi)
         else:
             raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 
 class T3_phipy(shape_fns):
     def expression(self, xi=0, eta=0):
         if self.p == 0:
-             return  -1 +np.zeros_like(eta)
+             return  0 +np.zeros_like(eta)
         elif self.p == 1:
-            return 0+np.zeros_like(eta)
-        elif self.p == 2:
             return 1+np.zeros_like(eta)
+        elif self.p == 2:
+            return -1+np.zeros_like(eta)
         else:
             raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 
@@ -67,7 +68,7 @@ class T3_phipy(shape_fns):
 class Q4_phi(shape_fns):
     def expression(self, xi=0, eta=0):
         if self.p == 0:
-             return (1 - xi) * (1 - eta)/4
+            return (xi-1)*(eta-1)/4
         elif self.p == 1:
             return (1 + xi) * (1 - eta)/4
         elif self.p == 2:
@@ -78,7 +79,7 @@ class Q4_phi(shape_fns):
             raise ValueError("p should be 0, 1, 2 or 3 in Q4 element shape functions, not {}".format(self.p))
 
 class Q4_phipx(shape_fns):
-    def expression(self, xi, eta):
+    def expression(self, xi=0, eta=0):
         if self.p == 0:
              return (eta - 1)/4
         elif self.p == 1:
@@ -86,7 +87,7 @@ class Q4_phipx(shape_fns):
         elif self.p == 2:
             return (1 + eta)/4
         elif self.p == 3:
-            return (-1 - eta)/4
+            return -(1 + eta)/4
         else:
             raise ValueError("p should be 0, 1, 2 or 3 in Q4 element shape functions, not {}".format(self.p))       
 
@@ -96,7 +97,7 @@ class Q4_phipy(shape_fns):
         if self.p == 0:
             return (xi - 1)/4
         elif self.p == 1:
-            return -(xi - 1)/4
+            return -(xi + 1)/4
         elif self.p == 2:
             return (1 + xi)/4
         elif self.p == 3:
