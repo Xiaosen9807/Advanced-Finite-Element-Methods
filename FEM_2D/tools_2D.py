@@ -7,23 +7,66 @@ import matplotlib.pyplot as plt
 import copy
 import traceback
 from shape_fns import *
+import numpy as np
 
-def Gauss_points(N=3, scale_x = [-1, 1], scale_y = [-1, 1]):
-    ax, bx = scale_x # Projection from [-1, 1] to scale_x
-    ay, by = scale_y # Projection from [-1, 1] to scale_y
-    x, wx = roots_legendre(N)
-    y, wy = roots_legendre(N)
-    xp = x*(bx-ax)/2+(bx+ax)/2
-    wxp = wx*(bx-ax)/2
-    yp = y*(by-ay)/2+(by+ay)/2
-    wyp = wy*(by-ay)/2
-    points = []
-    Ws = []
-    for i in range(N):
-        for j in range(N):
-            points.append([xp[j], yp[i]])
-            Ws.append(wxp[j]*wyp[i]) 
-    return points, Ws
+def Gauss_points(element, order):
+    """
+    Return Gauss integration points and weights for the given shape and order using leggauss.
+    
+    Parameters:
+    - shape: 'quad' for quadrilateral, 'triangle' for triangle
+    - order: desired accuracy of integration (1, 2, 3, ...)
+
+    Returns:
+    - points: list of Gauss points
+    - weights: list of Gauss weights
+    """
+    
+    if element.shape == 'quad':
+        xi, wi = np.polynomial.legendre.leggauss(order)
+        points = [(x, y) for x in xi for y in xi]
+        weights = [wx * wy for wx in wi for wy in wi]
+        
+    elif element.shape == 'triangle':
+        NGP_data = {
+            1: {
+                'points': [(1/3, 1/3)],
+                'weights': [1/2]
+            },
+            3: {
+                'points': [(1/6, 1/6), (2/3, 1/6), (1/6, 2/3)],
+                'weights': [1/6, 1/6, 1/6]
+            },
+            4: {
+                'points': [(1/3, 1/3), (0.6, 0.2), (0.2, 0.6), (0.2, 0.2)],
+                'weights': [-27/96, 25/96, 25/96, 25/96]
+            }
+        }
+        if order == 2:
+            order = 3
+        points, weights = NGP_data[order]['points'], NGP_data[order]['weights']
+    else:
+        raise ValueError("Shape not supported")
+
+    return points, weights
+
+
+# def Gauss_points(N=3, scale_x = [-1, 1], scale_y = [-1, 1]):
+#     ax, bx = scale_x # Projection from [-1, 1] to scale_x
+#     ay, by = scale_y # Projection from [-1, 1] to scale_y
+#     x, wx = roots_legendre(N)
+#     y, wy = roots_legendre(N)
+#     xp = x*(bx-ax)/2+(bx+ax)/2
+#     wxp = wx*(bx-ax)/2
+#     yp = y*(by-ay)/2+(by+ay)/2
+#     wyp = wy*(by-ay)/2
+#     points = []
+#     Ws = []
+#     for i in range(N):
+#         for j in range(N):
+#             points.append([xp[j], yp[i]])
+#             Ws.append(wxp[j]*wyp[i]) 
+#     return points, Ws
     
     
 def G_integrate_2D(u, N=3, scale_x = [0,1], scale_y = [0, 1]):

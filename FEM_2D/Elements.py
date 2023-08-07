@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import sympy as sp
 from shape_fns import *
 from tools_2D import *                
+import sys
 
    
 def id_to_index(a, b, c, d):
@@ -11,44 +12,46 @@ def id_to_index(a, b, c, d):
     j = mapping[str(c)+str(d)]
     return i, j
 
-def delta(i, j):
-    return int(i == j)
+def constitutive(i, j, k, l, E, nu):
+    delta = lambda x, y: 1 if x == y else 0
+    term1 = (E / (2 * (1 + nu))) * (delta(i, l) * delta(j, k) + delta(i, k) * delta(j, l))
+    term2 = (E * nu) / (1 - nu**2) * delta(i, j) * delta(k, l)
 
-def cal_K(element):
-    GPN = 3
-    points, Ws = Gauss_points(GPN, element.scale_xi, element.scale_eta)
+    return term1 + term2
+
+
+
+
+    
+def stiffness(element, GPN=2):
+    points, Ws = Gauss_points(element, GPN)
     n_nodes = element.n_nodes
     vertices = element.vertices
     E = element.E
     nu = element.nu
     E_matrix = np.zeros((4, 4))
-    for a in range(2):
-        for b in range(2):
-            for c in range(2):
-                for d in range(2):
-                    i, j = id_to_index(a, b, c, d)
-                    E_matrix[i, j] = E/(2+2*nu)*(delta(a,d)*delta(b,c)+delta(a,c)*delta(b,d)) + E*nu/(1-nu**2)*delta(a, b)*delta(c, d)
     K = np.zeros((n_nodes*2, n_nodes*2))
     for i in range(n_nodes):
         for j in range(n_nodes):
             Kij = np.zeros((2, 2))
-            for a in range((len(Kij))):
-                for c in range((len(Kij))):
-                    E_abcd = np.zeros((2, 2))
-                    for b in range(2):
-                        for d in range(2):
-                            id1, id2 = id_to_index(a, b, c, d)
-                            E_abcd[b, d] = E_matrix[id1, id2]
-                    for g in range(len(points)):
-                        point = points[g]
-                        NPi = [element.phipxs[i](point[0],point[1]),
-                                element.phipys[i](point[0],point[1])]
-                        NPj = [element.phipxs[j](point[0],point[1]),
-                                element.phipys[j](point[0],point[1])]
-                        left_v = np.dot(element.J_inv,NPi)
-                        right_v = np.dot(element.J_inv, NPj)
-                        Kij[a, c]+=Ws[g]*np.dot(np.dot(np.transpose(left_v),
-                                        E_abcd), right_v)*element.J_det
+            for g in range(len(points)):
+                point = points[g]
+                W = Ws[g]
+                NP = []
+                for node_id in range(n_nodes):
+                    NP.append([element.phipxs[node_id](point[0], point[1]),
+                               element.phipys[node_id](point[0], point[1])])
+                NP_net = np.array(NP)
+                # print('NP', NP.T)
+                J = jacobian(vertices, NP_net)
+                NP = np.linalg.inv(J).T @ NP_net.T
+                # print(NP)
+                for a in range((len(Kij))):
+                    for c in range((len(Kij))):
+                        for b in range(2):
+                            for d in range(2):
+                                Kij[a, c]+= NP[b, i] * constitutive(a, b, c, d, E, nu) * NP[d, j] * np.linalg.det(J) * W
+
                 # print(left_v)
             K[2*i:2*(i+1), 2*j:2*(j+1)] = Kij
 
@@ -68,7 +71,7 @@ class Node:
 
 
 class Element:
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0):  # E = 2000Mpa, nu = 0.3, A=4omm2
+    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):  # E = 2000Mpa, nu = 0.3, A=4omm2
         self.E = E
         self.nu = nu
         self.A = A
@@ -85,20 +88,8 @@ class Element:
         self.phipxs = [T3_phipx([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipys = [T3_phipy([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.K = np.zeros((self.n_nodes, self.n_nodes))
-        # self.Jacobi()
-    def initialize(self):
-        self.phips = []
-        for i in range(self.n_nodes):
-            self.phips.append([self.phipxs[i], self.phipys[i]])
-        self.NP = np.zeros((self.n_nodes, 2))
-        for i in range(len(self.nodes)):
-            self.NP[i][0] = self.phips[i][0](self.nodes[i].xy[0], self.nodes[i].xy[1])
-            self.NP[i][1] = self.phips[i][1](self.nodes[i].xy[0], self.nodes[i].xy[1])
-        self.J = jacobian(self.vertices, self.NP)
-        self.J_inv = np.linalg.inv(self.J)
-        self.J_det = np.linalg.det(self.J)
-        self.scale_xi = [0, 1]
-        self.scale_eta = [0, 1]
+        self.shape = 'init'
+        self.GPN = GPN
     def in_element(self, x, y):
         point = x, y
         polygon = np.array(self.vertices)
@@ -146,33 +137,32 @@ class Element:
             return value
         
 class T3(Element):
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0):
-        super().__init__(nodes,E, nu, A, id)
+    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):
+        super().__init__(nodes,E, nu, A, id, GPN)
         assert len(self.nodes)==3, "The number of nodes must be 3 in T3 element, rather than {}".format(len(self.nodes))
         
         self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipxs = [T3_phipx([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipys = [T3_phipy([0, 1], [0, 1], p) for p in range(len(self.nodes))]
-        self.initialize()
+        self.shape='triangle'
         self.scale_xi = [0, 1]
         self.scale_eta = [0, 1]
 
 
-        self.K = cal_K(self)        
+        self.K = stiffness(self, GPN)        
         
 class Q4(Element):
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0):
-        super().__init__(nodes,E, nu, A, id)
+    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=2):
+        super().__init__(nodes,E, nu, A, id, GPN)
         assert len(self.nodes)==4, "The number of nodes must be 4 in Q4 element, rather than {}".format(len(self.nodes))
         
         self.phis = [Q4_phi([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
         self.phipxs = [Q4_phipx([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
         self.phipys = [Q4_phipy([-1, 1], [-1, 1], p) for p in range(len(self.nodes))]
-        self.initialize()
-        print(np.dot(np.transpose(self.vertices), self.NP))
+        self.shape = 'quad'
         self.scale_xi = [-1, 1]
         self.scale_eta = [-1, 1]
-        self.K = cal_K(self) 
+        self.K = stiffness(self, GPN) 
 
         
 # compute Jacobian matrix
@@ -181,19 +171,18 @@ def jacobian(X, dN):
     # dN is the global coordinate of the phip
 
     # compute Jacobian matrix
-    J = np.dot(np.transpose(X),dN)
-
+    J = X.T @ dN
     return J 
 if __name__=="__main__":
-    E = 10
-    nu = 0.5
-    vertices_T3 = [[0, 0], [2, 1], [0.5, 2]]
+    E = 8/3
+    nu = 1/3
+    GPN = 4
     vertices_T3 = [[16.45327476, 25.20273424], [23.90255057, 19.62681142], [24.7911839 , 27.45556408]]
-    # vertices_T3 = [[1, 0.2], [2, 1.3], [0.5, 1.7]]
     vertices_T3 = [[1, 0], [0, 1], [0, 0]]
-    
-    vertices_Q4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
-    # vertices_Q4 = [[1, 1], [2, 1], [3, 2], [2, 2]]
+    vertices_T3 = [[0, 0], [2, 0], [1, 1]]
+
+    vertices_Q4 = [[0, 0], [1, 0], [1, 2], [0, 2]]
+    # vertices_Q4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
     # vertices_Q4 = [[1, 1], [2., 1], [2.5, 2.5], [1., 2]]
 
     Node_list_T3 = []
@@ -202,9 +191,9 @@ if __name__=="__main__":
     Node_list_Q4 = []
     for i in range(len(vertices_Q4)):
         Node_list_Q4.append(Node(vertices_Q4[i], i))
-    triangle = T3(Node_list_T3, E=E, nu=nu)
+    triangle = T3(Node_list_T3, E=E, nu=nu, GPN=GPN)
     print(triangle.K)
-    Q4_element = Q4(Node_list_Q4, E=E, nu=nu)
+    Q4_element = Q4(Node_list_Q4, E=E, nu=nu, GPN=GPN)
     print(Q4_element.K)
     t3_phi = T3_phi(0)
     
@@ -227,7 +216,9 @@ if __name__=="__main__":
     plt.ylabel('y')
     # plt.show()
     Node_list = Node_list_Q4
-    
+    b = 40
+    a_b=0.05
+    a = b*a_b
     # min_x = min([:, 0])
     for i in range(len(Node_list)):
         # Check left edge

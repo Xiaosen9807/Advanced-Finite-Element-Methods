@@ -82,7 +82,7 @@ def in_ellipse(xy, a, b):
     y = xy[1]
     return (x/b)**2 + (y/a)**2 <= 1+1e-3
 
-def inden_nodes(node_coords, a_b):
+def identify_nodes(node_coords, a_b):
     b=20
     a = b*a_b
     resiual = 1e-3
