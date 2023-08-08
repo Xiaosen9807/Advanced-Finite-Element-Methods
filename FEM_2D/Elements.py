@@ -19,9 +19,28 @@ def constitutive(i, j, k, l, E, nu):
 
     return term1 + term2
 
-
-
-
+def force(element, GPN=2):
+    points, Ws = Gauss_points(element, GPN)
+    n_nodes = element.n_nodes
+    vertices = element.vertices
+    E = element.E
+    nu = element.nu
+    F = np.zeros(n_nodes*2)
+    for i in range(n_nodes):
+        for g in range(len(Ws)):
+            point = points[g]
+            W = Ws[g]
+            NP = []
+            for node_id in range(n_nodes):
+                NP.append([element.phipxs[node_id](point[0], point[1]),
+                            element.phipys[node_id](point[0], point[1])])
+            NP_net = np.array(NP)
+            # print('NP', NP.T)
+            J = jacobian(vertices, NP_net)
+            F[2*i] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J) 
+            F[2*i+1] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J)
+            
+    return F
     
 def stiffness(element, GPN=2):
     points, Ws = Gauss_points(element, GPN)
@@ -29,11 +48,11 @@ def stiffness(element, GPN=2):
     vertices = element.vertices
     E = element.E
     nu = element.nu
-    E_matrix = np.zeros((4, 4))
     K = np.zeros((n_nodes*2, n_nodes*2))
     for i in range(n_nodes):
         for j in range(n_nodes):
             Kij = np.zeros((2, 2))
+            Fij = np.zeros(2)
             for g in range(len(points)):
                 point = points[g]
                 W = Ws[g]
@@ -65,13 +84,15 @@ class Node:
         self.id=id
         self.value = 0
         self.type='center'
+        self.BC = [0, 0] # -1: Neumann, 1: Dirichlet
         assert self.type in ['center','ellipse' 'le','re', 'be', 'te', 'ltc', 'rtc',
                              'lbc', 'blc', 'rbc'], "No.{} Node has a wrong type{}".format(self.id, self.type)
 
 
 
 class Element:
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):  # E = 2000Mpa, nu = 0.3, A=4omm2
+    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):
+        # E = 2000Mpa, nu = 0.3, A=4omm2
         self.E = E
         self.nu = nu
         self.A = A
@@ -191,12 +212,18 @@ if __name__=="__main__":
     Node_list_Q4 = []
     for i in range(len(vertices_Q4)):
         Node_list_Q4.append(Node(vertices_Q4[i], i))
-    triangle = T3(Node_list_T3, E=E, nu=nu, GPN=GPN)
-    print(triangle.K)
+    T3_node = Node_list_T3[0]
+    Q4_node = Node_list_Q4[0]
+    T3_element = T3(Node_list_T3, E=E, nu=nu, GPN=GPN)
+    print(T3_element.K)
     Q4_element = Q4(Node_list_Q4, E=E, nu=nu, GPN=GPN)
     print(Q4_element.K)
     t3_phi = T3_phi(0)
-    
+    F_T3 = force(T3_element)
+    print('F_T3', F_T3)
+
+    F_Q4 = force(Q4_element)
+    print('F_Q4', F_Q4)
 
     # ????????????
     x0, x1 = [0, 2]
@@ -215,33 +242,3 @@ if __name__=="__main__":
     plt.xlabel('x')
     plt.ylabel('y')
     # plt.show()
-    Node_list = Node_list_Q4
-    b = 40
-    a_b=0.05
-    a = b*a_b
-    # min_x = min([:, 0])
-    for i in range(len(Node_list)):
-        # Check left edge
-        if Node_list[i].xy[0]==0:
-            if Node_list[i].xy[1] == a:
-                Node_list[i].type ='lbc'
-            else:
-                Node_list[i].type = 'le'
-        # Check right edge
-        elif Node_list[i].xy[0] == 40:
-            Node_list[i].type = 're'
-        # Check bottom edge
-        if Node_list[i].xy[1]==0:
-            if Node_list[i].xy[0]==b:
-                Node_list[i].type='blc'
-            if Node_list[i].type=='re':
-                Node_list[i].type = 'rbc'
-            else:
-                Node_list[i].type = 'be'
-
-        if Node_list[i].xy[1]==40:
-            if Node_list[i].type=='le':
-                Node_list[i].type ='ltc'
-            else:
-                Node_list[i].type='tc'
-                      

@@ -13,11 +13,9 @@ show=True
 
 
 def create_mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
-        
     # 初始化gmsh
     gmsh.initialize()
     gmsh.model.add('2D shape')
-
     # 创建正方形
     rect_tag = gmsh.model.occ.addRectangle(0, 0, 0, 40, 40)
 
@@ -82,7 +80,7 @@ def in_ellipse(xy, a, b):
     y = xy[1]
     return (x/b)**2 + (y/a)**2 <= 1+1e-3
 
-def identify_nodes(node_coords, a_b):
+def Boundary(node_coords, a_b):
     b=20
     a = b*a_b
     resiual = 1e-3
@@ -94,48 +92,58 @@ def identify_nodes(node_coords, a_b):
         # Check ellipse node
         if in_ellipse(Node_list[i].xy, a, b):
             Node_list[i].type = 'ellipse'
+            Node_list[i].BC = [-1, -1]
         # Check left edge
         if abs(Node_list[i].xy[0]-0)<=resiual:
             if abs(Node_list[i].xy[1] - a) <= resiual:
                 Node_list[i].type ='lbc'
+                Node_list[i].BC = [1, -1]
             else:
                 Node_list[i].type = 'le'
+                Node_list[i].BC = [1, -1]
         # Check right edge
         elif abs(Node_list[i].xy[0] - 40 )<=resiual:
             Node_list[i].type = 're'
+            Node_list[i].BC = [-1, -1] 
         # Check bottom edge
         if abs(Node_list[i].xy[1]-0) <= resiual:
-            print(i, Node_list[i].xy)
-            # sys.exit(0)
             if abs(Node_list[i].xy[0]-b) <= resiual:
                 Node_list[i].type='blc'
+                Node_list[i].BC = [-1, 1]
             elif Node_list[i].type=='re':
                 Node_list[i].type = 'rbc'
+                Node_list[i].BC = [-1, 1]
             else:
                 Node_list[i].type = 'be'
+                Node_list[i].BC = [-1, 1]
 
+        # Check top edge
         if abs(Node_list[i].xy[1]-40)<=resiual:
+
             if Node_list[i].type=='le':
                 Node_list[i].type ='ltc'
-            else:
+                Node_list[i].BC = [1, -1]
+            elif Node_list[i].type == 're':
                 Node_list[i].type='rtc'
+                Node_list[i].BC = [-1, -1]
+            else:
+                Node_list[i].type = 'te'
+                Node_list[i].BC = [-1, -1]
+                
     return Node_list
 
 if __name__=='__main__':
     a_b = 0.5
     node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=0, mesh_size=10, show=False)
-    Nodes_list = inden_nodes(node_coords, a_b)
-
-
+    Nodes_list = Boundary(node_coords, a_b)
         
-
     print(len(Nodes_list))
     print(len(element_nodes))
     print(element_nodes)
     # print(im=esh_ori.getNodes())
     plt.scatter(node_coords[:, 0], node_coords[:, 1])
     for node in Nodes_list:
-        print(node.id, node.xy, node.type)
+        print(node.id, node.xy, node.type, node.BC)
     for (x, y), node in zip(node_coords, Nodes_list):
             # 在指定的坐标处显示文本
             plt.text(x, y, node.id) 
