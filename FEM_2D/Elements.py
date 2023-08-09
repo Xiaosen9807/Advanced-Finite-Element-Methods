@@ -37,8 +37,8 @@ def force(element, GPN=2):
             NP_net = np.array(NP)
             # print('NP', NP.T)
             J = jacobian(vertices, NP_net)
-            F[2*i] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J) 
-            F[2*i+1] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J)
+            for dof in range(2):
+                F[2*i+dof] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J) 
             
     return F
     
@@ -91,7 +91,7 @@ class Node:
 
 
 class Element:
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):
+    def __init__(self, nodes, E=200e3, nu=0.3, A=40, id=0, GPN=3):
         # E = 2000Mpa, nu = 0.3, A=4omm2
         self.E = E
         self.nu = nu
@@ -115,17 +115,19 @@ class Element:
         point = x, y
         polygon = np.array(self.vertices)
         n = len(polygon)
+        count = 0  # 初始化count
+
         for i in range(n):
             p1, p2 = polygon[i], polygon[(i + 1) % n]
 
             if np.all(p1 == point) or np.all(p2 == point):
                 return True
 
-            if p1[1] == p2[1]:
-                if point[1] == p1[1] and min(p1[0], p2[0]) <= point[0] <= max(p1[0], p2[0]):
+            if p1[1] == p2[1]:  # 当边界是水平线时
+                if point[1] == p1[1] and min(p1[0], p2[0]) < point[0] < max(p1[0], p2[0]):  # 仅当点位于两个端点之间时才返回True
                     return True
-            elif min(p1[1], p2[1]) <= point[1] < max(p1[1], p2[1]):
-                x = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0]  
+            elif min(p1[1], p2[1]) < point[1] <= max(p1[1], p2[1]):  # 确保点位于线段的y范围内
+                x = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0]
                 if x == point[0]:
                     return True
                 elif x > point[0]:
@@ -154,11 +156,11 @@ class Element:
                 for ix, x_val in enumerate(x):
                     for iy, y_val in enumerate(y):
                         if self.in_element(x_val, y_val):
-                            value[iy, ix] += self.nodes[i].value * self.phis[i](x_val, y_val)
+                            value[iy, ix] += self.nodes[i].value[0] * self.phis[i](x_val, y_val)
             return value
         
 class T3(Element):
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=3):
+    def __init__(self, nodes, E=200e3, nu=0.3, A=40, id=0, GPN=3):
         super().__init__(nodes,E, nu, A, id, GPN)
         assert len(self.nodes)==3, "The number of nodes must be 3 in T3 element, rather than {}".format(len(self.nodes))
         
@@ -174,7 +176,7 @@ class T3(Element):
         self.F = force(self,GPN)
         
 class Q4(Element):
-    def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=2):
+    def __init__(self, nodes, E=200e3, nu=0.3, A=40, id=0, GPN=2):
         super().__init__(nodes,E, nu, A, id, GPN)
         assert len(self.nodes)==4, "The number of nodes must be 4 in Q4 element, rather than {}".format(len(self.nodes))
         
@@ -196,29 +198,48 @@ def jacobian(X, dN):
     # compute Jacobian matrix
     J = X.T @ dN
     return J 
+
+def assemable_elements(element_list):
+    def model(x, y, type='stress', dir='x'):
+        init_matrix = element_list[0](x, y)
+        for i in range(1, len(element_list)):
+            init_matrix = add_matrices(init_matrix, element_list[i](x, y))
+        return init_matrix
+    return model
+
 if __name__=="__main__":
     E = 8/3
     nu = 1/3
     GPN = 4
     vertices_T3 = [[16.45327476, 25.20273424], [23.90255057, 19.62681142], [24.7911839 , 27.45556408]]
     vertices_T3 = [[1, 0], [0, 1], [0, 0]]
-    vertices_T3 = [[0, 0], [2, 0], [1, 1]]
+    # vertices_T3 = [[0, 0], [2, 0], [1, 1]]
 
     vertices_Q4 = [[0, 0], [1, 0], [1, 2], [0, 2]]
+    vertices_Q4_2 = [[1, 0], [2, 0], [2, 2], [1, 2]]
     # vertices_Q4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
     # vertices_Q4 = [[1, 1], [2., 1], [2.5, 2.5], [1., 2]]
 
     Node_list_T3 = []
     for i in range(len(vertices_T3)):
         Node_list_T3.append(Node(vertices_T3[i], i))
+        Node_list_T3[-1].value = [np.random.rand(), np.random.rand()]
     Node_list_Q4 = []
+    Node_list_Q4_2= []
     for i in range(len(vertices_Q4)):
         Node_list_Q4.append(Node(vertices_Q4[i], i))
+        Node_list_Q4[-1].value = [np.random.rand(),np.random.rand() ]
+        Node_list_Q4_2.append(Node(vertices_Q4_2[i], i))
+        Node_list_Q4_2[-1].value = [np.random.rand(),np.random.rand() ]
+
     T3_node = Node_list_T3[0]
     Q4_node = Node_list_Q4[0]
+    Q4_node_2 = Node_list_Q4_2[0]
     T3_element = T3(Node_list_T3, E=E, nu=nu, GPN=GPN)
+    
     print(T3_element.K)
     Q4_element = Q4(Node_list_Q4, E=E, nu=nu, GPN=GPN)
+    Q4_element_2 = Q4(Node_list_Q4_2, E=E, nu=nu, GPN=GPN)
     print(Q4_element.K)
     t3_phi = T3_phi(0)
     F_T3 = force(T3_element)
@@ -237,10 +258,16 @@ if __name__=="__main__":
     
     # ??expression???????
     output = t3_phi(xi, eta)
-    print('output', output)
+    output = Q4_element(xi, eta)
+    element_list = [Q4_element, Q4_element_2]
+    model = assemable_elements(element_list)
+    output = model(xi, eta)
+    test_point = [0, 1.1]
+    print(T3_element.in_element(test_point[0], test_point[1]))
+    print(output)
     plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
     plt.colorbar()
     plt.title('Shape Function')
     plt.xlabel('x')
     plt.ylabel('y')
-    # plt.show()
+    plt.show()

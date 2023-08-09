@@ -50,42 +50,20 @@ def Gauss_points(element, order):
 
     return points, weights
 
+def add_matrices(*args):
+    # 检查矩阵尺寸是否相同
+    first_shape = args[0].shape
+    # 初始化结果矩阵为第一个矩阵
+    result = np.copy(args[0])
 
-# def Gauss_points(N=3, scale_x = [-1, 1], scale_y = [-1, 1]):
-#     ax, bx = scale_x # Projection from [-1, 1] to scale_x
-#     ay, by = scale_y # Projection from [-1, 1] to scale_y
-#     x, wx = roots_legendre(N)
-#     y, wy = roots_legendre(N)
-#     xp = x*(bx-ax)/2+(bx+ax)/2
-#     wxp = wx*(bx-ax)/2
-#     yp = y*(by-ay)/2+(by+ay)/2
-#     wyp = wy*(by-ay)/2
-#     points = []
-#     Ws = []
-#     for i in range(N):
-#         for j in range(N):
-#             points.append([xp[j], yp[i]])
-#             Ws.append(wxp[j]*wyp[i]) 
-#     return points, Ws
+    # 遍历其余矩阵并加到结果矩阵上
+    for mat in args[1:]:
+        if mat.shape != first_shape:
+            raise ValueError("All matrices must have the same shape!")
+        zero_indices = result == 0
+        result[zero_indices] += mat[zero_indices]
     
-    
-def G_integrate_2D(u, N=3, scale_x = [0,1], scale_y = [0, 1]):
-    
-    ax, bx = scale_x # Projection from [-1, 1] to scale_x
-    ay, by = scale_y # Projection from [-1, 1] to scale_y
-    x, wx = roots_legendre(N)
-    y, wy = roots_legendre(N)
-    xp = x*(bx-ax)/2+(bx+ax)/2
-    wxp = wx*(bx-ax)/2
-    yp = y*(by-ay)/2+(by+ay)/2
-    wyp = wy*(by-ay)/2
-    integral = 0.0
-    for i in range(N):
-        for j in range(N):
-            integral += wxp[i] * wyp[j] * u(xp[i], yp[j])
-            
-    return integral
-
+    return result
 
 
 class operate(shape_fns):

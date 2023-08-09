@@ -60,7 +60,7 @@ def create_mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
 
     # 获取所有的节点信息（节点标签，节点坐标和参数化坐标）
     node_tags, node_coords, parametric_coords = gmsh.model.mesh.getNodes()
-    print(node_tags)
+    # print(node_tags)
 
     # 获取所有的单元信息（元素类型，元素标签和节点连接性）
     element_types, element_tags, element_nodes = gmsh.model.mesh.getElements()
