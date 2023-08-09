@@ -24,6 +24,12 @@ def create_mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
     # 创建椭圆
     ellipse_tag = gmsh.model.occ.addEllipse(0, 0, 0, b, a)
 
+    # 旋转椭圆90度
+    center = [0, 0, 0]
+    axis_direction = [0, 0, 1]  # Z轴方向
+    angle = 90 * np.pi / 180  # 将角度转换为弧度
+    gmsh.model.occ.rotate([(1, ellipse_tag)], center[0], center[1], center[2], axis_direction[0], axis_direction[1], axis_direction[2], angle)
+
     # 创建一个椭圆的线循环
     ellipse_loop = gmsh.model.occ.addCurveLoop([ellipse_tag])
 
@@ -133,7 +139,7 @@ def Boundary(node_coords, a_b):
     return Node_list
 
 if __name__=='__main__':
-    a_b = 0.5
+    a_b = 0.1
     node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=0, mesh_size=10, show=False)
     Nodes_list = Boundary(node_coords, a_b)
         

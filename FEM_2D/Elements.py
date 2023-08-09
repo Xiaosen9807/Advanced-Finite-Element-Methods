@@ -82,7 +82,7 @@ class Node:
     def __init__(self, xy, id=0):
         self.xy = xy
         self.id=id
-        self.value = 0
+        self.value = np.zeros(2)
         self.type='center'
         self.BC = [0, 0] # -1: Neumann, 1: Dirichlet
         assert self.type in ['center','ellipse' 'le','re', 'be', 'te', 'ltc', 'rtc',
@@ -171,6 +171,7 @@ class T3(Element):
 
 
         self.K = stiffness(self, GPN)        
+        self.F = force(self,GPN)
         
 class Q4(Element):
     def __init__(self, nodes, E=2e3, nu=0.3, A=40, id=0, GPN=2):
@@ -184,6 +185,7 @@ class Q4(Element):
         self.scale_xi = [-1, 1]
         self.scale_eta = [-1, 1]
         self.K = stiffness(self, GPN) 
+        self.F = force(self,GPN)
 
         
 # compute Jacobian matrix
