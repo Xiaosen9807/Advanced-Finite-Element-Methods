@@ -107,7 +107,7 @@ if __name__=='__main__':
    mesh_size = 2
    mesh_shape = 1
    GPN = 2
-   show = False
+   show = True
    U, nodes_list, elements_list = FEM(a_b, mesh_size, mesh_shape, GPN, show)
    x0, x1 = [0, 40]
    y0, y1 = [0, 40]
@@ -115,11 +115,11 @@ if __name__=='__main__':
    eta = np.linspace(y0, y1, 100)
    model = assemable_elements(elements_list)
    output = model(xi, eta)
-   plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
-   plt.colorbar()
-   plt.title('Shape Function')
-   plt.xlabel('x')
-   plt.ylabel('y')
-   plt.show()
+   # plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
+   # plt.colorbar()
+   # plt.title('Shape Function')
+   # plt.xlabel('x')
+   # plt.ylabel('y')
+   # plt.show()
 
 
