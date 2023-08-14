@@ -5,6 +5,9 @@ import sympy as sp
 from shape_fns import *
 from tools_2D import *                
 import sys
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 
    
 def id_to_index(a, b, c, d):
@@ -57,11 +60,12 @@ def stiffness(element, GPN=2):
             for g in range(len(points)):
                 point = points[g]
                 W = Ws[g]
-                NP = []
-                for node_id in range(n_nodes):
-                    NP.append([element.phipxs[node_id](point[0], point[1]),
-                               element.phipys[node_id](point[0], point[1])])
-                NP_net = np.array(NP)
+                # NP = []
+                # for node_id in range(n_nodes):
+                #     NP.append([element.phipxs[node_id](point[0], point[1]),
+                #                element.phipys[node_id](point[0], point[1])])
+                # NP_net = np.array(NP)
+                NP_net = element.gradshape(point[0], point[1])
                 # print('NP', NP.T)
                 J = jacobian(vertices, NP_net)
                 NP = np.linalg.inv(J).T @ NP_net.T
@@ -115,6 +119,30 @@ class Element:
         self.scale_eta = [0, 1]
         self.xi_eta = np.array([[1, 0], [0, 1], [0, 0]])
         self.GPN = GPN
+    def gradshape(self, xi, eta):
+        dN =np.zeros((self.n_nodes, 2)) 
+        for i in range(self.n_nodes):
+            dN[i, 0] = self.phipxs[i](xi, eta)
+            dN[i, 1] = self.phipys[i](xi, eta)
+        return dN
+    def B_matrix(self, J, dN):
+        B = np.zeros((3, 2*self.n_nodes))
+        J_inv = np.linalg.inv(J)
+        M = J_inv.T @ dN.T
+        for i in range(3):
+            for j in range(self.n_nodes):  # 注意：这里我们只循环到n_nodes，因为我们每次都会处理两列
+                col = 2*j  # 2*j是偶数列
+                if i == 0:  # epsilon_11
+                    B[i][col] = M[0][j]
+                elif i == 1:  # epsilon_22
+                    B[i][col+1] = M[1][j]
+                elif i == 2:  # epsilon_12
+                    B[i][col] = M[0][j]
+                    B[i][col+1] = M[1][j]
+        # print('B', B)
+        return B
+ 
+ 
     def mapping(self, refine):
         xi_eta = self.sample_points(refine)
         vertices = self.vertices
@@ -125,22 +153,8 @@ class Element:
             for i in range(len(vertices)):
                 vet += self.phis[i](xi, eta) * vertices[i]
             vts.append(vet)
+        
         return np.array(vts)
-    # def mapping(self, refine):
-    #     NP = np.zeros((self.n_nodes, 2))
-    #     for i in range(len(self.nodes)):
-    #         xi, eta = 0, 0
-    #         NP[i][0] = self.phipxs[i](xi, eta)
-    #         NP[i][1] = self.phipys[i](xi, eta)
-    #         # self.NP[i][0] = self.phipxs[i](self.xi_eta[i][0], self.xi_eta[i][1])
-    #         # self.NP[i][1] = self.phipys[i](self.xi_eta[i][0], self.xi_eta[i][0])
-    #     J_init = jacobian(self.vertices, NP)
-    #     print('self.NP', NP)
-    #     J_inv = np.linalg.inv(J_init)
-    #     local_points = self.sample_points(refine)
-    #     global_points = [J_inv @ loc_point.T for loc_point in local_points]
-    #         # Remove the homogeneous coordinate
-    #     return np.array(global_points)
 
     def sample_points(self, refine):
         xi_eta = self.xi_eta
@@ -164,25 +178,68 @@ class Element:
 
     def __str__(self):
         return str(self.vertices)
-    
-    def __call__(self, x=0, y=0):
-        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-            # Deal with single numbers
-            value = 0
-            for i in range(len(self.nodes)):
-                value += self.nodes[i].value * self.phis[i](x, y)
-            return value
-        else:
-            # Deal with arrays
-            x = np.asarray(x)
-            y = np.asarray(y)
 
-            value = np.zeros((len(x), len(y)))
-            for i in range(len(self.nodes)):
-                for ix, x_val in enumerate(x):
-                    for iy, y_val in enumerate(y):
-                        value[iy, ix] += self.nodes[i].value[0] * self.phis[i](x_val, y_val)
-            return value
+    def __call__(self, x=0, y=0, dir='x', type='disp'):
+        assert dir in ['x', 'y', 'xy','norm', 'von'],  "Invalid direction"
+        assert type in ['disp', 'strain', 'stress'], "Invalid type"
+        result = 0
+        try:
+            if type == 'disp' :
+                for i in range(self.n_nodes):
+                    dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
+                    dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
+                    if dir == 'x':
+                        result += dis_x
+                    elif dir == 'y':
+                        result += dis_y
+                    elif dir =='norm':
+                        result += np.sqrt(dis_x**2 + dis_y**2)
+            else:
+                U = np.zeros(self.n_nodes*2)
+                for i in range(self.n_nodes):
+                    U[2*i] = self.nodes[i].value[0]
+                    U[2*i+1] = self.nodes[i].value[1]
+                dN = self.gradshape(x, y)
+                J = jacobian(self.vertices, dN)
+                B = self.B_matrix(J, dN)
+                strain_vector = B @ U
+                epsilon_x, epsilon_y, gamma_xy = strain_vector
+            if type == 'strain':
+                if dir == 'x':
+                    result += epsilon_x
+                elif dir == 'y':
+                    result += epsilon_y
+                elif dir == 'norm':
+                    result += np.sqrt(epsilon_x**2 + epsilon_y**2)
+                elif dir == 'xy':
+                    result += gamma_xy
+
+            elif type == 'stress':
+                E, nu = self.E, self.nu
+                D = (E / ((1 + nu) * (1 - 2 * nu))) * np.array([
+                    [1 - nu, nu, 0],
+                    [nu, 1 - nu, 0],
+                    [0, 0, (1 - 2 * nu) / 2]
+                ])
+                stress_vector = D @ strain_vector
+                sigma_x, sigma_y, tau_xy = stress_vector 
+
+                if dir == 'x':
+                    result += sigma_x
+                elif dir == 'y':
+                    result += sigma_y
+                elif dir == 'norm':
+                    result += np.sqrt(sigma_x**2 + sigma_y**2)
+                elif dir == 'xy':
+                    result += tau_xy
+                elif dir == 'von':
+                    result += np.sqrt(sigma_x**2 - sigma_x * sigma_y + sigma_y**2 + 3 * tau_xy**2)
+        except Exception as e:
+            error_msg = f"Bug encountered with dir: {dir} and type: {type}. Error: {e}"
+            raise Exception(error_msg)
+
+        return result
+
     def in_element(self, x, y):
         point = x, y
         polygon = np.array(self.vertices)
@@ -204,32 +261,6 @@ class Element:
                     return True
                 elif x > point[0]:
                     count += 1
-        return count % 2 == 1
-    
-    # def __str__(self):
-    #     return str(self.vertices)
-    
-    # def __call__(self, x=0, y=0):
-        
-    #     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-    #         # Deal with single numbers
-    #         value = 0
-    #         for i in range(len(self.nodes)):
-    #             if self.in_element(x, y):
-    #                 value += self.nodes[i].value * self.phis[i](x, y)
-    #         return value
-    #     else:
-    #         # Deal with arrays
-    #         x = np.asarray(x)
-    #         y = np.asarray(y)
-
-    #         value = np.zeros((len(x), len(y)))
-    #         for i in range(len(self.nodes)):
-    #             for ix, x_val in enumerate(x):
-    #                 for iy, y_val in enumerate(y):
-    #                     if self.in_element(x_val, y_val):
-    #                         value[iy, ix] += self.nodes[i].value[0] * self.phis[i](x_val, y_val)
-    #         return value
         
 class T3(Element):
     def __init__(self, nodes, E=200e3, nu=0.3, A=40, id=0, GPN=3):
@@ -287,7 +318,7 @@ if __name__=="__main__":
     # vertices_T3 = [[1, 0], [0, 1], [0, 0]]
     # vertices_T3 = [[0, 0], [2, 0], [1, 1]]
 
-    vertices_Q4 = np.array([[0.5, 0.5], [1, 0], [1, 2], [0, 2]])
+    vertices_Q4 = np.array([[0.5, 0.5], [1, 0], [0.8, 1.7], [0, 2]])
     vertices_Q4_2 = [[1, 0], [2, 0], [2, 2], [1, 2]]
     # vertices_Q4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
     # vertices_Q4 = [[1, 1], [2., 1], [2.5, 2.5], [1., 2]]
@@ -313,34 +344,53 @@ if __name__=="__main__":
     Q4_node_2 = Node_list_Q4_2[0]
     T3_element = T3(Node_list_T3, E=E, nu=nu, GPN=GPN)
     
-    print(T3_element.K)
+    # print(T3_element.K)
     Q4_element = Q4(Node_list_Q4, E=E, nu=nu, GPN=GPN)
     Q4_element_2 = Q4(Node_list_Q4_2, E=E, nu=nu, GPN=GPN)
-    print(Q4_element.K)
+    # print(Q4_element.K)
     t3_phi = T3_phi(0)
     F_T3 = force(T3_element)
-    print('F_T3', F_T3)
+    # print('F_T3', F_T3)
 
     F_Q4 = force(Q4_element)
-    print('F_Q4', F_Q4)
+    # print('F_Q4', F_Q4)
 
+    refine=3
     # ????????????
-    x0, x1 = [0, 1]
-    y0, y1 = [0, 1]
-    xi = np.linspace(x0, x1, 100)
-    eta = np.linspace(y0, y1, 100)
+    x0, x1 = [-1, 1]
+    y0, y1 = [-1, 1]
+    xi = np.linspace(x0, x1, refine)
+    eta = np.linspace(y0, y1, refine)
     #    xi = 0.1
     #    eta = 0.2
     
     # ??expression???????
-    T3_element.nodes[0].value = [1, 1] 
+    T3_element.nodes[0].value = [2, 2] 
     output = t3_phi(xi, eta)
-    refine = 100
+    dir = 'x'
+    type = 'strain'
+    Q4_element.nodes[0].value = [2, 3]
     Q4_mapping = Q4_element.mapping(refine)
-    T3_mapping = T3_element.mapping(refine)
-    plt.scatter(T3_mapping[:, 0],T3_mapping[:, 1], s=100,  label='test')
-    plt.scatter(vertices_T3[:, 0], vertices_T3[:, 1], label='real')
+    Q4_inputs = Q4_element.sample_points(refine)
+    Q4_output = [Q4_element(xy[0], xy[1], dir, type) for xy in Q4_inputs]
+    print('Q4_output', Q4_output)
+    T3_mapping = T3_element.mapping(refine) 
+    grid_x = np.linspace(Q4_mapping[:, 0].min(), Q4_mapping[:, 0].max(), 1000)
+    grid_y = np.linspace(Q4_mapping[:, 1].min(), Q4_mapping[:, 1].max(), 1000)
+    grid_x, grid_y = np.meshgrid(grid_x, grid_y)
+
+    # Interpolate using griddata
+    grid_z = griddata(Q4_mapping, Q4_output, (grid_x, grid_y), method='cubic')
+
+    # Plot the heatmap using imshow
+    plt.imshow(grid_z, extent=(Q4_mapping[:, 0].min(), Q4_mapping[:, 0].max(), Q4_mapping[:, 1].min(), Q4_mapping[:, 1].max()),
+            origin='lower', aspect='auto')
+
+    # Display the color bar
+    plt.colorbar()
+    # plt.scatter(vertices_T3[:, 0], vertices_T3[:, 1], label='real')
     plt.legend()
+    plt.title('{}, {}'.format(dir, type))
     plt.show()
 
     # output = Q4_element(xi, eta)
@@ -350,9 +400,10 @@ if __name__=="__main__":
     test_point = [0, 1.1]
     print(T3_element.in_element(test_point[0], test_point[1]))
     print(output)
-    plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
-    plt.colorbar()
-    plt.title('Shape Function')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.show()
+    # plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
+    # plt.colorbar()
+    # plt.title('Shape Function')
+    # plt.xlabel('x')
+    # plt.ylabel('y')
+    # # plt.show()
+    

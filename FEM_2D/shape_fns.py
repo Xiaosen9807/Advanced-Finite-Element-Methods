@@ -22,11 +22,11 @@ class shape_fns:
 
     def __call__(self, x=0, y=0):
         
-        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-            xi, eta = [x, y]
-        else:
-            xi, eta = self.gridnize(x, y)
-        return  self.expression(xi, eta)
+        # if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+        #     xi, eta = [x, y]
+        # else:
+        #     xi, eta = self.gridnize(x, y)
+        return  self.expression(x, y)
         # return np.where((self.scale_x[0] <= xi) & (xi <= self.scale_x[1]) & (self.scale_y[0] <= eta) & (eta <= self.scale_y[1]), self.expression(xi, eta), 0)
 
 
@@ -45,22 +45,22 @@ class T3_phi(shape_fns):
 class T3_phipx(shape_fns):
     def expression(self, xi=0, eta=0):
         if self.p == 0:
-             return 1+np.zeros_like(xi)
+             return 1
         elif self.p == 1:
-            return 0+np.zeros_like(xi)
+            return 0
         elif self.p == 2:
-            return -1+np.zeros_like(xi)
+            return -1
         else:
             raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 
 class T3_phipy(shape_fns):
     def expression(self, xi=0, eta=0):
         if self.p == 0:
-             return  0 +np.zeros_like(eta)
+             return 0
         elif self.p == 1:
-            return 1+np.zeros_like(eta)
+            return 1
         elif self.p == 2:
-            return -1+np.zeros_like(eta)
+            return -1
         else:
             raise ValueError("p should be 0, 1 or 2 in T3 element shape functions, not {}".format(self.p))
 

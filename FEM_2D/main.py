@@ -1,11 +1,10 @@
-from matplotlib.transforms import _make_str_method
 import numpy as np
 import sympy as sp
 from tools_2D import *
 from shape_fns import *
 from Elements import *
 from Mesh import create_mesh, Boundary
-
+import pickle
 
 def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False): 
    Load_x = 50 # N/mm
@@ -61,9 +60,10 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
                # 检查迪里希莱边界条件
                if node_i.BC[dof_i] == 1:
                   # 修改刚度矩阵和载荷向量
+                  print(node_i.id, global_dof_i, node_i.BC)
                   glo_K[global_dof_i, :] = 0
                   glo_K[:, global_dof_i] = 0
-                  glo_K[global_dof_i, global_dof_i] = 1e15  # 大数约束
+                  glo_K[global_dof_i, global_dof_i] = 1e5  # 大数约束
                   glo_F[global_dof_i] = 0
 
    np.set_printoptions(precision=2, suppress=True)
@@ -89,11 +89,11 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
 
       x_coords = [node.xy[0] for node in nodes_list]
       y_coords = [node.xy[1] for node in nodes_list]
-      temperatures = [node.value[0] for node in nodes_list]
+      temperatures = [node.value[1] for node in nodes_list]
 
       # 创建散点图
       plt.scatter(x_coords, y_coords, c=temperatures, cmap='inferno')
-      plt.colorbar(label='Displacement in X direction')
+      plt.colorbar(label='Displacement in Y direction')
       plt.title('Displacements Distribution')
       for (x, y), node in zip(nodes_coord, nodes_list):
             # 在指定的坐标处显示文本
@@ -103,23 +103,96 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
    return U, copy.deepcopy(nodes_list), copy.deepcopy(element_list)
 
 if __name__=='__main__':
-   a_b = 0.5
-   mesh_size = 2
-   mesh_shape = 1
-   GPN = 2
-   show = True
-   U, nodes_list, elements_list = FEM(a_b, mesh_size, mesh_shape, GPN, show)
-   x0, x1 = [0, 40]
-   y0, y1 = [0, 40]
-   xi = np.linspace(x0, x1, 100)
-   eta = np.linspace(y0, y1, 100)
-   model = assemable_elements(elements_list)
-   output = model(xi, eta)
-   # plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
-   # plt.colorbar()
-   # plt.title('Shape Function')
-   # plt.xlabel('x')
-   # plt.ylabel('y')
-   # plt.show()
+      a_b_lst = [1, 0.5, 0.05]
+      mesh_size_lst = [8, 4, 2]
+      mesh_shape_lst = [0, 1]
+      show = False
+      GPN = 2
+      refine = 3
+      data_dict = []
+      for a_b in a_b_lst:
+         for mesh_size in mesh_size_lst:
+            for mesh_shape in mesh_shape_lst:
+               U, nodes_list, elements_list = FEM(a_b, mesh_size,
+                                                mesh_shape, GPN, show)
+               shape = 'Q4' if mesh_shape==1 else 'T3'
+               this_data_dict = { 'a_b': a_b, 'mesh_size':mesh_size,
+                           'mesh_shape': shape, "U": U, "nodes_list":
+                           nodes_list, "elements_list": elements_list }
+               data_dict.append(this_data_dict)
+      #          break
+      #       break
+      #    break
+
+      # # 打开一个文件并保存字典
+      with open("data.pkl", "wb") as f:
+         pickle.dump(data_dict, f)
+
+      # Determine global min and max values
+      dir = 'y'
+      type = 'stress'
+   
+      rand_data = 0.2
+      if dir == 'y':
+         point = [rand_data, -1]
+      elif dir =='x':
+         point = [-1, rand_data]
+      else:
+         point = [-1, -1]
+
+      for element in elements_list:
+         print(element(point[0], point[1], dir, type))
+         if abs(element(point[0], point[1], dir, type) - 0) < 1e-4:
+            print(element)
+
+      global_min = min([np.min([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+      global_max = max([np.max([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+      for test_element in elements_list:
+         test_mapping = test_element.mapping(refine)
+         test_inputs = test_element.sample_points(refine)
+         test_output = [test_element(xy[0], xy[1],dir, type) for xy in test_inputs]
+         test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
+         plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
+                                    test_mapping[:, 0].max(),
+                                    test_mapping[:, 1].min(),
+                                    test_mapping[:, 1].max()),
+                                    origin='lower', aspect='auto',
+                                    interpolation='bilinear',
+                                       vmin=global_min, vmax=global_max)
+            # 绘制元素的边界
+         vertices = test_element.vertices
+         vertices = np.vstack([vertices, vertices[0]])  # 将第一个顶点再次添加到数组的末尾，以便封闭形状
+         vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
+         plt.plot(vertices_x, vertices_y,  color='white')  # 使用黑色线绘制边界，并使用小圆点表示顶点
+
+      plt.xlim(0, 40)
+      plt.ylim(0, 40)
+      # Display the color bar
+      plt.colorbar()
+      plt.legend()
+      if type == 'disp':
+         type_str = 'U'
+      elif type == 'strain':
+         type_str = '\\epsilon'
+      elif type == 'stress':
+         type_str = '\\sigma'
+      dir_str = "{ %s }" % dir
+      # if dir == 'xy':
+      #    dir_str = '{xy}'
+      # elif dir == 'von':
+      #    dir_str = '{von}'
+      # else:
+      #    dir_str = dir
+      plt.title(rf"${type_str}_{dir_str}$")
+      plt.show()
+      # for node in nodes_list:
+      #    print(node.id, node.BC, node.value)
+
+      # plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
+      # plt.colorbar()
+      # plt.title('Shape Function')
+      # plt.xlabel('x')
+      # plt.ylabel('y')
+      # plt.show()
 
 

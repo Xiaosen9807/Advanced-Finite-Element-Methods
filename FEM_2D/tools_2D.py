@@ -1,6 +1,7 @@
 import numpy as np
 import sympy as sp
 from scipy.special import roots_legendre
+from scipy.interpolate import griddata
 import scipy.linalg as la
 import matplotlib.pyplot as plt
 # plt.style.use('default')
@@ -160,4 +161,13 @@ def assemble(*matrices):
     if res_matrix.shape[0]<=1:
         return res_matrix[0]
     return res_matrix
+def grid_to_mat(mapping, output):
 
+    grid_x = np.linspace(mapping[:, 0].min(), mapping[:, 0].max(), 1000)
+    grid_y = np.linspace(mapping[:, 1].min(), mapping[:, 1].max(), 1000)
+    grid_x, grid_y = np.meshgrid(grid_x, grid_y)
+
+    # Interpolate using griddata
+    grid_z = griddata(mapping, output, (grid_x, grid_y), method='cubic')
+    return grid_x, grid_y, grid_z
+    
