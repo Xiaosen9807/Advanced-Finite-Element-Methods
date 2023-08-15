@@ -1,98 +1,53 @@
+import pickle
+import matplotlib.pyplot as plt
 import numpy as np
-print('hello world!')
-import sympy as sym
-import numpy as np
-from sympy.matrices import Matrix
+from tools_2D import *
+from shape_fns import *
+from Elements import *
 
-# ?????????????? (x0, y0), (x1, y1), (x2, y2)
-x0, x1, x2, y0, y1, y2 = sym.symbols(['x_0', 'x_1', 'x_2', 'y_0', 'y_1', 'y_2'])
+with open("Data/data.pkl", "rb") as f:
+    data_ori = pickle.load(f)
+print(len(data_ori[-1]['nodes_list']))
+def draw(elements_list, dir ='xy',type = 'disp'):
+    refine = 3
+    global_min = min([np.min([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+    global_max = max([np.max([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+    for test_element in elements_list:
+        test_mapping = test_element.mapping(refine)
+        test_inputs = test_element.sample_points(refine)
+        test_output = [test_element(xy[0], xy[1],dir, type) for xy in test_inputs]
+        test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
+        plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
+                                    test_mapping[:, 0].max(),
+                                    test_mapping[:, 1].min(),
+                                    test_mapping[:, 1].max()),
+                                    origin='lower', aspect='auto',
+                                    interpolation='bilinear',
+                                        vmin=global_min, vmax=global_max)
+            # 绘制元素的边界
+        vertices = test_element.vertices
+        vertices = np.vstack([vertices, vertices[0]])  # 将第一个顶点再次添加到数组的末尾，以便封闭形状
+        vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
+        plt.plot(vertices_x, vertices_y,  color='white')  # 使用黑色线绘制边界，并使用小圆点表示顶点
 
-# ????????????
-J = Matrix([[x1-x0, y1-y0], 
-            [x2-x0, y2-y0]])
-
-# ??????????? (eta, zeta)
-eta, zeta = sym.symbols(['\eta', '\zeta'])
-u0 = 1 - eta - zeta
-u1 = eta
-u2 = zeta
-
-# ??????? [du/deta, du/dzeta]
-du = Matrix([[sym.diff(u0, eta),sym.diff(u1, eta),sym.diff(u2, eta)],
-[sym.diff(u0, zeta), sym.diff(u1, zeta), sym.diff(u2, zeta)]])
-
-# ???????? du/dx, du/dy = J^{-1} * [du/deta, du/dzeta]
-def deriv_u(): 
-    return sym.simplify(J.inv() * du)
-
-# ??? e ???? 9 ?????????????? 1/2|J|
-Ke = sym.zeros(3,3)
-du_ =  deriv_u() * J.det()
-for i in range(3):
-    for j in range(3):
-        Ke[i, j] = du_[:, i].dot(du_[:, j])
-print(Ke)        
-
-def integrate_ukf(k=0):
-    f0, f1, f2 = sym.symbols(['f_0', 'f_1', 'f_2'])
-    f = u0 * f0 + u1 * f1 + u2 * f2
-    u = [u0, u1, u2]
-    feta = sym.integrate(u[k] * f, (zeta, 0, 1-eta))
-    return sym.integrate(feta, (eta, 0, 1))
-
-F = integrate_ukf(k=0)
-print(F)
-
-def point_in_polygon(polygon, point):
-    count = 0
-    n = len(polygon)
-    for i in range(n):
-        p1, p2 = polygon[i], polygon[(i + 1) % n]
-        
-        # ???????
-        if np.all(p1 == point) or np.all(p2 == point):
-            return True
-
-        # ????????
-        if p1[1] == p2[1]:
-            if point[1] == p1[1] and min(p1[0], p2[0]) <= point[0] <= max(p1[0], p2[0]):
-                return True
-        # ??????????
-        elif min(p1[1], p2[1]) <= point[1] < max(p1[1], p2[1]):
-            x = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0]  # ??? x ??
-            # ??????
-            if x == point[0]:
-                return True
-            # ???????
-            elif x > point[0]:
-                count += 1
-    # ???????????? True????? False
-    return count % 2 == 1
-
-# ??????????
-A = np.array([0, 0])
-B = np.array([1, 0])
-C = np.array([1, 1])
-D = np.array([0.5, 1.5])
-E = np.array([0, 1])
-P = np.array([0, -1])
-points_list = np.array([A, B, C, D, E, P])
-
-
-print(point_in_polygon([A, B, C, D, E], P))  # True
-import numpy as np
-
-# ?????????
-import sympy as sp
-
-x1, x2, x3, x4, y1, y2, y3, y4, eta, xi = sp.symbols('x1, x2, x3, x4, y1, y2, y3, y4, eta, xi')
-X = np.array([x1, x2, x3, x4])
-Y = np.array([y1, y2, y3, y4])
-
-# ??Q4????????ksi?eta????
-dN_dksi = np.array([-0.25*(1-eta), 0.25*(1-eta), 0.25*(1+eta), -0.25*(1+eta)])
-dN_deta = np.array([-0.25*(1-xi), -0.25*(1+xi), 0.25*(1+xi), 0.25*(1-xi)])
-
-# ??Jacobian??
-J = np.array([[np.dot(dN_dksi, X), np.dot(dN_deta, X)], 
-              [np.dot(dN_dksi, Y), np.dot(dN_deta, Y)]])
+    plt.xlim(0, 40)
+    plt.ylim(0, 40)
+    # Display the color bar
+    plt.colorbar()
+    plt.legend()
+    if type == 'disp':
+        type_str = 'U'
+    elif type == 'strain':
+        type_str = '\\epsilon'
+    elif type == 'stress':
+        type_str = '\\sigma'
+    dir_str = "{ %s }" % dir
+    # if dir == 'xy':
+    #    dir_str = '{xy}'
+    # elif dir == 'von':
+    #    dir_str = '{von}'
+    # else:
+    #    dir_str = dir
+    plt.title(rf"${type_str}_{dir_str}$")
+    plt.show()
+draw(data_ori[-1]['elements_list'], dir = 'xy', type = 'disp')

@@ -179,8 +179,10 @@ class Element:
     def __str__(self):
         return str(self.vertices)
 
-    def __call__(self, x=0, y=0, dir='x', type='disp'):
+    def __call__(self, x=0, y=0, dir='von', type='stress'):
         assert dir in ['x', 'y', 'xy','norm', 'von'],  "Invalid direction"
+        assert not (dir=='xy' and type=='disp'), "Displacement don't have shear"
+
         assert type in ['disp', 'strain', 'stress'], "Invalid type"
         result = 0
         try:
@@ -193,7 +195,8 @@ class Element:
                     elif dir == 'y':
                         result += dis_y
                     elif dir =='norm':
-                        result += np.sqrt(dis_x**2 + dis_y**2)
+                        result += np.sqrt(self.nodes[i].value[0] **2 + self.nodes[i].value[1] **2 * self.phis[i](x, y)
+)
             else:
                 U = np.zeros(self.n_nodes*2)
                 for i in range(self.n_nodes):

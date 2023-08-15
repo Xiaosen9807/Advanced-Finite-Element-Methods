@@ -163,8 +163,8 @@ def assemble(*matrices):
     return res_matrix
 def grid_to_mat(mapping, output):
 
-    grid_x = np.linspace(mapping[:, 0].min(), mapping[:, 0].max(), 1000)
-    grid_y = np.linspace(mapping[:, 1].min(), mapping[:, 1].max(), 1000)
+    grid_x = np.linspace(mapping[:, 0].min(), mapping[:, 0].max(), 100)
+    grid_y = np.linspace(mapping[:, 1].min(), mapping[:, 1].max(), 100)
     grid_x, grid_y = np.meshgrid(grid_x, grid_y)
 
     # Interpolate using griddata

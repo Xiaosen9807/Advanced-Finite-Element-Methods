@@ -47,6 +47,7 @@ def create_mesh(a_b=0.05, mesh_shape=1, mesh_size=8, show=False):
     gmsh.option.setNumber("Mesh.RecombinationAlgorithm", 3)
     gmsh.option.setNumber("Mesh.RecombineAll", mesh_shape)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh_size)
+    gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh_size)
 
 
     # 同步模型
@@ -140,7 +141,9 @@ def Boundary(node_coords, a_b):
 
 if __name__=='__main__':
     a_b = 0.1
-    node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=0, mesh_size=10, show=False)
+    mesh_shape=1
+    mesh_size= 8
+    node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=mesh_shape, mesh_size=mesh_size, show=True)
     Nodes_list = Boundary(node_coords, a_b)
         
     print(len(Nodes_list))

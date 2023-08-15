@@ -104,45 +104,41 @@ class Q4_phipy(shape_fns):
             return (1 - xi)/4
         else:
             raise ValueError("p should be 0, 1, 2 or 3 in Q4 element shape functions, not {}".format(self.p))
+def exact_fn(x, y,a_b, dir='von'):
+    b = 20
+    a = b*a_b
+    sigma_0 = 50 #Mpa
+    lambda_ = 1/2*(x**2+y**2-a**2-b**2+((x**2+y**2-a**2+b**2)**2+4*(a**2-b**2) * y**2)**0.5)
 
+            # Define rho_a and rho_b
+    rho_a = a /np.sqrt(a**2 + lambda_)
+    rho_b = b / np.sqrt(b**2 + lambda_)
 
-class exact_fn(shape_fns):
-    def __init__(self, a=20, b=20, scale_x=[0, 40], scale_y=[0, 40], dire='xx'):
-        #unit: mm
-        assert dire not in ['xx', 'yy', 'xy'], "The stress  direction should be 'xx', 'yy' or 'xy'"
-        self.dire = dire
-        self.a = a
-        self.b = b
-        self.scale_x = scale_x
-        self.scale_y = scale_y
-    def expression(self, x, y):
-        a = self.a
-        b = self.b
-        sigma_0 = 50 #Mpa
-        lambda_ = 1/2*(x**2+y**2-a**2-b**2+((x**2+y**2-a**2+b**2)**2+4*(a**2-b**2) * y**2)**0.5)
+    # Define n_x and n_y
+    n_x = x * (b**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
+    n_y = y * (a**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
 
-                # Define rho_a and rho_b
-        rho_a = a /np.sqrt(a**2 + lambda_)
-        rho_b = b / np.sqrt(b**2 + lambda_)
+    # Define H_1 to H_5
+    H_1 = (a**2 * rho_a**2 * rho_b**2 + b**2 * rho_a**2 + a * b * rho_a * rho_b) / (a * rho_b + b * rho_a)**2 - rho_b**2 * n_x**2 - rho_a**2 * n_y**2 + (5 * rho_a**2 + 5 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2 * n_y**2
+    H_2 = (rho_b * a * (a * rho_b + b * rho_a + 2 * b * rho_a * rho_b**2 + a * rho_b**3)) / (a * rho_b + b * rho_a)**2 + n_y**2 * (2 - 6 * rho_b**2 + (rho_a**2 + 9 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
+    H_3 = n_x * n_y * (1 - 3 * rho_b**2 + (3 * rho_a**2 + 7 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
+    H_4 = (rho_a * b * (a * rho_b + b * rho_a + 2 * a * rho_a**2 * rho_b + b * rho_a**3)) / (a * rho_b + b * rho_a)**2 + n_x**2 * (2 - 6 * rho_a**2 + (9 * rho_a**2 + rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
+    H_5 = n_x * n_y * (1 - 3 * rho_a**2 + (7 * rho_a**2 + 3 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
+    
+    sigma_x = sigma_0*(1-rho_a*rho_b*(H_1/2 -(b/a+0.5)*H_4))
+    sigma_y = sigma_0*(-rho_a*rho_b*(H_2/2 -(b/a+0.5)*H_1))
+    tau_xy = sigma_0*(-rho_a*rho_b*(H_3/2 -(b/a+0.5)*H_5))
 
-        # Define n_x and n_y
-        n_x = x * (b**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
-        n_y = y * (a**2 + lambda_) / np.sqrt(x**2 * (b**2+lambda_)**2 + y**2 * (a**2 + lambda_)**2)
+    if dir == 'x':
+        return sigma_x 
+    elif dir == 'y':
+        return sigma_y
+    elif dir == 'xy':
+        return tau_xy
+    elif dir == 'von':
+        return np.sqrt(sigma_x**2 - sigma_x * sigma_y + sigma_y**2 + 3 * tau_xy**2)
 
-        # Define H_1 to H_5
-        H_1 = (a**2 * rho_a**2 * rho_b**2 + b**2 * rho_a**2 + a * b * rho_a * rho_b) / (a * rho_b + b * rho_a)**2 - rho_b**2 * n_x**2 - rho_a**2 * n_y**2 + (5 * rho_a**2 + 5 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2 * n_y**2
-        H_2 = (rho_b * a * (a * rho_b + b * rho_a + 2 * b * rho_a * rho_b**2 + a * rho_b**3)) / (a * rho_b + b * rho_a)**2 + n_y**2 * (2 - 6 * rho_b**2 + (rho_a**2 + 9 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
-        H_3 = n_x * n_y * (1 - 3 * rho_b**2 + (3 * rho_a**2 + 7 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_y**2)
-        H_4 = (rho_a * b * (a * rho_b + b * rho_a + 2 * a * rho_a**2 * rho_b + b * rho_a**3)) / (a * rho_b + b * rho_a)**2 + n_x**2 * (2 - 6 * rho_a**2 + (9 * rho_a**2 + rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
-        H_5 = n_x * n_y * (1 - 3 * rho_a**2 + (7 * rho_a**2 + 3 * rho_b**2 - 4 * rho_a**2 * n_x**2 - 4 * rho_b**2 * n_y**2 - 4) * n_x**2)
-
-        if self.dire == 'xx':
-            return  sigma_0*(1-rho_a*rho_b*(H_1/2 -(b/a+0.5)*H_4))
-        elif self.dire == 'yy':
-            return sigma_0*(-rho_a*rho_b*(H_2/2 -(b/a+0.5)*H_1))
-        elif self.dire == 'xy':
-            return sigma_0*(-rho_a*rho_b*(H_3/2 -(b/a+0.5)*H_5))
-        
+ 
 class rhs_fn(shape_fns):
     def __init__(self, scale_x=[0, 40], scale_y=[0, 40]):
         self.scale_x = scale_x
