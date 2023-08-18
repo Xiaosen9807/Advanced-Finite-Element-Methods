@@ -9,6 +9,35 @@ import copy
 import traceback
 from shape_fns import *
 import numpy as np
+import math
+
+class Element:
+    def __init__(self, vertices):
+        self.vertices = vertices
+
+def distance(p1, p2):
+    """计算两点之间的距离"""
+    return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+
+def triangle_area(p1, p2, p3):
+    """使用海伦公式计算三角形面积"""
+    a = distance(p1, p2)
+    b = distance(p2, p3)
+    c = distance(p1, p3)
+    s = (a + b + c) / 2
+    return math.sqrt(s * (s - a) * (s - b) * (s - c))
+
+def quadrilateral_area(p1, p2, p3, p4):
+    """计算四边形面积，将其分为两个三角形"""
+    return triangle_area(p1, p2, p3) + triangle_area(p1, p3, p4)
+
+def calculate_area(element):
+    if len(element.vertices) == 3:
+        return triangle_area(*element.vertices)
+    elif len(element.vertices) == 4:
+        return quadrilateral_area(*element.vertices)
+    else:
+        raise ValueError("Element has an unsupported number of vertices.")
 
 def Gauss_points(element, order):
     """

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
+from scipy.optimize import minimize
 
 
 class shape_fns:
@@ -147,7 +148,25 @@ class rhs_fn(shape_fns):
         pass
 
 
+def posterior_energy(energy_list_array, DOFs_array, slope):
+    if len(energy_list_array)<3:
+        raise AssertionError("The value of energy should be greater than three!")
+    elif len(energy_list_array)!= len(DOFs_array):
+        raise AssertionError("The number of energy values should be equal to the number of DOFs!")
 
+    Bh = abs(slope)
+    i = 0
+    U_list = []
+    while i+3 < len(energy_list_array):
+        U0, U1, U2 = energy_list_array[i:i+3]
+        h0, h1, h2 = 1/np.sqrt(DOFs_array[i:i+3])
+        Q = np.log((h0/h1))/np.log((h1/h2))
+        lhs = lambda U: np.log(abs((U-U0)/(U-U1)))/np.log(abs((U-U1)/(U-U2)))
+        initial_guess = np.mean(energy_list_array[1:])
+        result = minimize(lhs, initial_guess)
+        U_list.append(result.x)
+        i+=1
+    return np.mean(U_list)
 
         
 if __name__=="__main__":

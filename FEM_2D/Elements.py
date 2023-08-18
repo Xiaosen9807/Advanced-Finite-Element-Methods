@@ -22,7 +22,6 @@ def constitutive(i, j, k, l, E, nu):
     term2 = (E * nu) / (1 - nu**2) * delta(i, j) * delta(k, l)
 
     return term1 + term2
-
 def force(element, GPN=2):
     points, Ws = Gauss_points(element, GPN)
     n_nodes = element.n_nodes
@@ -34,12 +33,7 @@ def force(element, GPN=2):
         for g in range(len(Ws)):
             point = points[g]
             W = Ws[g]
-            NP = []
-            for node_id in range(n_nodes):
-                NP.append([element.phipxs[node_id](point[0], point[1]),
-                            element.phipys[node_id](point[0], point[1])])
-            NP_net = np.array(NP)
-            # print('NP', NP.T)
+            NP_net = element.gradshape(point[0], point[1])
             J = jacobian(vertices, NP_net)
             for dof in range(2):
                 F[2*i+dof] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J) 
@@ -56,17 +50,10 @@ def stiffness(element, GPN=2):
     for i in range(n_nodes):
         for j in range(n_nodes):
             Kij = np.zeros((2, 2))
-            Fij = np.zeros(2)
             for g in range(len(points)):
                 point = points[g]
                 W = Ws[g]
-                # NP = []
-                # for node_id in range(n_nodes):
-                #     NP.append([element.phipxs[node_id](point[0], point[1]),
-                #                element.phipys[node_id](point[0], point[1])])
-                # NP_net = np.array(NP)
                 NP_net = element.gradshape(point[0], point[1])
-                # print('NP', NP.T)
                 J = jacobian(vertices, NP_net)
                 NP = np.linalg.inv(J).T @ NP_net.T
                 # print(NP)
@@ -110,6 +97,7 @@ class Element:
             vertices.append(Node.xy)
             self.node_id.append(Node.id)
         self.vertices = np.array(vertices)
+        self.area = self.calculate_area()
         self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipxs = [T3_phipx([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipys = [T3_phipy([0, 1], [0, 1], p) for p in range(len(self.nodes))]
@@ -137,8 +125,8 @@ class Element:
                 elif i == 1:  # epsilon_22
                     B[i][col+1] = M[1][j]
                 elif i == 2:  # epsilon_12
-                    B[i][col] = M[0][j]
-                    B[i][col+1] = M[1][j]
+                    B[i][col] = M[1][j]
+                    B[i][col+1] = M[0][j]
         # print('B', B)
         return B
  
@@ -195,13 +183,12 @@ class Element:
                     elif dir == 'y':
                         result += dis_y
                     elif dir =='norm':
-                        result += np.sqrt(self.nodes[i].value[0] **2 + self.nodes[i].value[1] **2 * self.phis[i](x, y)
-)
+                        result += np.sqrt(self.nodes[i].value[0] **2 + self.nodes[i].value[1] **2 * self.phis[i](x, y))
             else:
-                U = np.zeros(self.n_nodes*2)
+                U = np.zeros((self.n_nodes*2, 1))
                 for i in range(self.n_nodes):
-                    U[2*i] = self.nodes[i].value[0]
-                    U[2*i+1] = self.nodes[i].value[1]
+                    U[2*i] += self.nodes[i].value[0]
+                    U[2*i+1] += self.nodes[i].value[1]
                 dN = self.gradshape(x, y)
                 J = jacobian(self.vertices, dN)
                 B = self.B_matrix(J, dN)
@@ -219,10 +206,10 @@ class Element:
 
             elif type == 'stress':
                 E, nu = self.E, self.nu
-                D = (E / ((1 + nu) * (1 - 2 * nu))) * np.array([
-                    [1 - nu, nu, 0],
-                    [nu, 1 - nu, 0],
-                    [0, 0, (1 - 2 * nu) / 2]
+                D = E / (1 - nu**2)* np.array([
+                    [1, nu, 0],
+                    [nu, 1, 0],
+                    [0, 0, (1-nu)/2]
                 ])
                 stress_vector = D @ strain_vector
                 sigma_x, sigma_y, tau_xy = stress_vector 
@@ -236,12 +223,20 @@ class Element:
                 elif dir == 'xy':
                     result += tau_xy
                 elif dir == 'von':
-                    result += np.sqrt(sigma_x**2 - sigma_x * sigma_y + sigma_y**2 + 3 * tau_xy**2)
+                    result += np.sqrt(sigma_x**2-sigma_x*sigma_y+sigma_y**2+3*tau_xy**2)
         except Exception as e:
             error_msg = f"Bug encountered with dir: {dir} and type: {type}. Error: {e}"
             raise Exception(error_msg)
 
         return result
+
+    def calculate_area(self):
+        if len(self.vertices) == 3:
+            return triangle_area(*self.vertices)
+        elif len(self.vertices) == 4:
+            return quadrilateral_area(*self.vertices)
+        else:
+            raise ValueError("Element has an unsupported number of vertices.")
 
     def in_element(self, x, y):
         point = x, y

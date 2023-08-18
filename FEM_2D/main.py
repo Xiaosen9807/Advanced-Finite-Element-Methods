@@ -47,7 +47,7 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
          global_dof = 2 * node_i.id
          if abs(node_i.xy[0]-40)< 1e-3:
             glo_F[global_dof] +=  Load_x * loc_F[0]
-            glo_F[global_dof + 1] += Load_y * loc_F[1] 
+            glo_F[global_dof + 1] += Load_y * loc_F[1]
 
 
 
@@ -73,8 +73,9 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
                if node_i.BC[dof_i] == 1:
                   # 修改刚度矩阵和载荷向量
                   # print(node_i.id, global_dof_i, node_i.BC)
+
                   glo_K[global_dof_i, :] = 0
-                  glo_K[:, global_dof_i] = 0
+                  # glo_K[:, global_dof_i] = 0
                   glo_K[global_dof_i, global_dof_i] = 1e5  # 大数约束
                   glo_F[global_dof_i] = 0
 
@@ -107,6 +108,7 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
 if __name__=='__main__':
    experi = True
    show = False
+   save = True
    GPN = 2
    refine = 3
    if experi == True:
@@ -115,10 +117,9 @@ if __name__=='__main__':
          mesh_shape_lst = [0, 1]
 
    else:
-         a_b_lst = [0.05]
-         mesh_size_lst = [ 8]
-         mesh_shape_lst = [1]
-
+         a_b_lst = [0.5]
+         mesh_size_lst = [2]
+         mesh_shape_lst = [0, 1]
 
    data_dict = []
    for a_b in a_b_lst:
@@ -136,14 +137,12 @@ if __name__=='__main__':
    #    break
 
    # # 打开一个文件并保存字典
-   with open("Data/data.pkl", "wb") as f:
-      pickle.dump(data_dict, f)
-
-
+   if save ==True:
+      with open("Data/data.pkl", "wb") as f:
+         pickle.dump(data_dict, f)
    # Determine global min and max values
-   dir = 'norm'
-   type = 'disp'
-
+   dir = 'xy'
+   type = 'strain'
    with open("Data/data.pkl", "rb") as f:
       data_ori = pickle.load(f)
 
@@ -159,7 +158,8 @@ if __name__=='__main__':
    for element in elements_list:
       # print(element(point[0], point[1], dir, type))
       if abs(element(point[0], point[1], dir, type) - 0) < 1e-4:
-         print(element)
+         pass
+         # print(element)
 
    global_min = min([np.min([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
    global_max = max([np.max([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
@@ -179,7 +179,7 @@ if __name__=='__main__':
       vertices = test_element.vertices
       vertices = np.vstack([vertices, vertices[0]])  # 将第一个顶点再次添加到数组的末尾，以便封闭形状
       vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
-      plt.plot(vertices_x, vertices_y,  color='white')  # 使用黑色线绘制边界，并使用小圆点表示顶点
+      plt.plot(vertices_x, vertices_y,  color='white', linewidth=.5)  # 使用黑色线绘制边界，并使用小圆点表示顶点
 
    plt.xlim(0, 40)
    plt.ylim(0, 40)

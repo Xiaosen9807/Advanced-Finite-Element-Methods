@@ -5,7 +5,7 @@ from tools_2D import *
 from shape_fns import *
 from Elements import *
 
-with open("Data/data.pkl", "rb") as f:
+with open("data.pkl", "rb") as f:
     data_ori = pickle.load(f)
 print(len(data_ori[-1]['nodes_list']))
 def draw(elements_list, dir ='xy',type = 'disp'):
