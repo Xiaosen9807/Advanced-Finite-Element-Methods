@@ -131,8 +131,11 @@ class Element:
         return B
  
  
-    def mapping(self, refine):
-        xi_eta = self.sample_points(refine)
+    def mapping(self, xi_eta):
+        if isinstance(xi_eta, (int, float)):
+            xi_eta = self.sample_points(xi_eta)
+        else:
+            pass
         vertices = self.vertices
         vts = []
         for loc in xi_eta:
@@ -368,11 +371,12 @@ if __name__=="__main__":
     dir = 'x'
     type = 'strain'
     Q4_element.nodes[0].value = [2, 3]
-    Q4_mapping = Q4_element.mapping(refine)
     Q4_inputs = Q4_element.sample_points(refine)
+    Q4_mapping = Q4_element.mapping(Q4_inputs)
     Q4_output = [Q4_element(xy[0], xy[1], dir, type) for xy in Q4_inputs]
     print('Q4_output', Q4_output)
-    T3_mapping = T3_element.mapping(refine) 
+    T3_inputs = T3_element.sample_points(refine)
+    T3_mapping = T3_element.mapping(T3_inputs) 
     grid_x = np.linspace(Q4_mapping[:, 0].min(), Q4_mapping[:, 0].max(), 1000)
     grid_y = np.linspace(Q4_mapping[:, 1].min(), Q4_mapping[:, 1].max(), 1000)
     grid_x, grid_y = np.meshgrid(grid_x, grid_y)

@@ -3,6 +3,7 @@ import sympy as sp
 from tools_2D import *
 from shape_fns import *
 from Elements import *
+from Energy import *
 from Mesh import create_mesh, Boundary
 import pickle
 import sys
@@ -104,7 +105,42 @@ def FEM(a_b, mesh_size, mesh_shape, GPN = 2, show = False):
 
       plt.show()
    return U, nodes_coord, copy.deepcopy(element_list)
+def draw(elements_list, dir ='xy',type = 'disp'):
+    refine = 3
+    global_min = min([np.min([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+    global_max = max([np.max([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+    for test_element in elements_list:
+        test_inputs = test_element.sample_points(refine)
+        test_mapping = test_element.mapping(test_inputs)
+        test_output = [test_element(xy[0], xy[1],dir, type) for xy in test_inputs]
+        test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
+        plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
+                                    test_mapping[:, 0].max(),
+                                    test_mapping[:, 1].min(),
+                                    test_mapping[:, 1].max()),
+                                    origin='lower', aspect='auto',
+                                    interpolation='none', cmap='jet',
+                                        vmin=global_min, vmax=global_max)
+            # 绘制元素的边界
+        vertices = test_element.vertices
+        vertices = np.vstack([vertices, vertices[0]])  # 将第一个顶点再次添加到数组的末尾，以便封闭形状
+        vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
+        plt.plot(vertices_x, vertices_y,  color='white', linewidth=0.7)  # 使用黑色线绘制边界，并使用小圆点表示顶点
 
+    plt.xlim(0, 40)
+    plt.ylim(0, 40)
+    # Display the color bar
+    plt.colorbar()
+    plt.legend()
+    if type == 'disp':
+        type_str = 'U'
+    elif type == 'strain':
+        type_str = '\\epsilon'
+    elif type == 'stress':
+        type_str = '\\sigma'
+    dir_str = "{ %s }" % dir
+    plt.title(rf"${type_str}_{dir_str}$")
+    plt.show()
 if __name__=='__main__':
    experi = True
    show = False
@@ -128,15 +164,17 @@ if __name__=='__main__':
             U, nodes_list, elements_list = FEM(a_b, mesh_size,
                                              mesh_shape, GPN, show)
             shape = 'Q4' if mesh_shape==1 else 'T3'
-            this_data_dict = { 'a_b': a_b, 'mesh_size':mesh_size,
-                        'mesh_shape': shape, "U": U, "nodes_coord":
-                        nodes_list, "elements_list": elements_list }
+            this_data_dict = {'a_b': a_b, 'mesh_size':mesh_size,
+                        'mesh_shape': shape, 
+                        "DOF":len(nodes_list)*2, 
+                        "U": U, "nodes_coord":nodes_list,
+                        "elements_list": elements_list }
             data_dict.append(this_data_dict)
    #          break
    #       break
    #    break
 
-   # # 打开一个文件并保存字典
+   # # 打开一个文件并保T3存字典
    if save ==True:
       with open("Data/data.pkl", "wb") as f:
          pickle.dump(data_dict, f)
@@ -145,72 +183,7 @@ if __name__=='__main__':
    type = 'strain'
    with open("Data/data.pkl", "rb") as f:
       data_ori = pickle.load(f)
+   save_energy(data_ori, save)
 
    elements_list = data_ori[-1]['elements_list']
-   rand_data = 0.2
-   if dir == 'y':
-      point = [rand_data, -1]
-   elif dir =='x':
-      point = [-1, rand_data]
-   else:
-      point = [-1, -1]
-
-   for element in elements_list:
-      # print(element(point[0], point[1], dir, type))
-      if abs(element(point[0], point[1], dir, type) - 0) < 1e-4:
-         pass
-         # print(element)
-
-   global_min = min([np.min([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
-   global_max = max([np.max([test_element(xy[0], xy[1], dir, type) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
-   for test_element in elements_list:
-      test_mapping = test_element.mapping(refine)
-      test_inputs = test_element.sample_points(refine)
-      test_output = [test_element(xy[0], xy[1],dir, type) for xy in test_inputs]
-      test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
-      plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
-                                 test_mapping[:, 0].max(),
-                                 test_mapping[:, 1].min(),
-                                 test_mapping[:, 1].max()),
-                                 origin='lower', aspect='auto',
-                                 interpolation='bilinear',
-                                    vmin=global_min, vmax=global_max)
-         # 绘制元素的边界
-      vertices = test_element.vertices
-      vertices = np.vstack([vertices, vertices[0]])  # 将第一个顶点再次添加到数组的末尾，以便封闭形状
-      vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
-      plt.plot(vertices_x, vertices_y,  color='white', linewidth=.5)  # 使用黑色线绘制边界，并使用小圆点表示顶点
-
-   plt.xlim(0, 40)
-   plt.ylim(0, 40)
-   # Display the color bar
-   plt.colorbar()
-   plt.legend()
-   if type == 'disp':
-      type_str = 'U'
-   elif type == 'strain':
-      type_str = '\\epsilon'
-   elif type == 'stress':
-      type_str = '\\sigma'
-   dir_str = "{ %s }" % dir
-   # if dir == 'xy':
-   #    dir_str = '{xy}'
-   # elif dir == 'von':
-   #    dir_str = '{von}'
-   # else:
-   #    dir_str = dir
-   plt.title(rf"${type_str}_{dir_str}$")
-   plt.show()
-   # for node in nodes_list:
-   #    print(node.id, node.BC, node.value)
-
-   # plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
-   # plt.colorbar()
-   # plt.title('Shape Function')
-
-
-   # plt.xlabel('x')
-   # plt.ylabel('y')
-   # plt.show()
-
-
+   draw(elements_list, dir, type)

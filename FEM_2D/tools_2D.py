@@ -60,16 +60,16 @@ def Gauss_points(element, order):
     elif element.shape == 'triangle':
         NGP_data = {
             1: {
-                'points': [(1/3, 1/3)],
-                'weights': [1/2]
+                'points': np.array([(1/3, 1/3)]),
+                'weights': np.array([1/2])
             },
             3: {
-                'points': [(1/6, 1/6), (2/3, 1/6), (1/6, 2/3)],
-                'weights': [1/6, 1/6, 1/6]
+                'points': np.array([(1/6, 1/6), (2/3, 1/6), (1/6, 2/3)]),
+                'weights': np.array([1/6, 1/6, 1/6])
             },
             4: {
-                'points': [(1/3, 1/3), (0.6, 0.2), (0.2, 0.6), (0.2, 0.2)],
-                'weights': [-27/96, 25/96, 25/96, 25/96]
+                'points': np.array([(1/3, 1/3), (0.6, 0.2), (0.2, 0.6), (0.2, 0.2)]),
+                'weights': np.array([-27/96, 25/96, 25/96, 25/96])
             }
         }
         if order == 2:
