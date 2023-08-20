@@ -200,3 +200,48 @@ def grid_to_mat(mapping, output):
     grid_z = griddata(mapping, output, (grid_x, grid_y), method='cubic')
     return grid_x, grid_y, grid_z
     
+def principal_stresses(sigma_x, sigma_y, tau_xy):
+    """
+    Compute the principal stresses from stress components.
+    
+    Parameters:
+    - sigma_x: Stress in x direction
+    - sigma_y: Stress in y direction
+    - tau_xy: Shear stress
+    
+    Returns:
+    - Principal stresses (sigma1, sigma2)
+    """
+    
+    # Calculate the average stress
+    sigma_avg = (sigma_x + sigma_y) / 2
+    
+    # Calculate half the range of the stresses
+    R = np.sqrt(((sigma_x - sigma_y) / 2)**2 + tau_xy**2)
+    
+    # Principal stresses
+    sigma1 = sigma_avg + R
+    sigma2 = sigma_avg - R
+    
+    return (sigma1, sigma2)
+
+def output(input, dir, type='stress'):
+    assert not (len(input) == 2 and dir not in ['x', 'y', 'norm']), "Invalid combination of input length and direction."
+    assert type in ['disp', 'strain', 'stress'], "Invalid type"
+    sigma_x, sigma_y, tau_xy = input
+    if dir == "x":
+        return input[0]
+    elif dir == "y":
+        return input[1]
+    elif dir == "xy":
+        return input[2]
+    
+    elif dir == "norm":
+        if len(input) ==2:
+            return np.norm(input)
+        else:
+            sigma1, sigma2 = principal_stresses(sigma_x, sigma_y, tau_xy)
+            return max(abs(sigma1), abs(sigma2))  # R
+    elif dir == "von":
+        result = np.sqrt(sigma_x**2-sigma_x*sigma_y+sigma_y**2+3*tau_xy**2)
+        return result

@@ -5,6 +5,7 @@ import sympy as sp
 from shape_fns import *
 from tools_2D import *                
 import sys
+from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
@@ -88,6 +89,7 @@ class Element:
         self.E = E
         self.nu = nu
         self.A = A
+        self.a_b = 1
         self.id = id
         self.nodes = nodes
         self.n_nodes = len(self.nodes)
@@ -146,6 +148,18 @@ class Element:
             vts.append(vet)
         
         return np.array(vts)
+    def to_local(self, global_point):
+        # Define the error function directly inside the global_to_local method
+        def error_function(local_coords):
+            x_current, y_current = self.mapping([local_coords])[0]
+            return [global_point[0] - x_current, global_point[1] - y_current]
+
+        # Use fsolve to find the local coordinates that minimize the error
+        local_coords, _, flag, _ = fsolve(error_function, [0, 0], full_output=True)
+        
+        if flag != 1:
+            print("Warning: fsolve did not converge.")
+        return local_coords
 
     def sample_points(self, refine):
         xi_eta = self.xi_eta
@@ -170,70 +184,41 @@ class Element:
     def __str__(self):
         return str(self.vertices)
 
-    def __call__(self, x=0, y=0, dir='von', type='stress'):
-        assert dir in ['x', 'y', 'xy','norm', 'von'],  "Invalid direction"
-        assert not (dir=='xy' and type=='disp'), "Displacement don't have shear"
-
+    def __call__(self, x=0, y=0, type='stress'):
         assert type in ['disp', 'strain', 'stress'], "Invalid type"
-        result = 0
-        try:
-            if type == 'disp' :
-                for i in range(self.n_nodes):
-                    dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
-                    dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
-                    if dir == 'x':
-                        result += dis_x
-                    elif dir == 'y':
-                        result += dis_y
-                    elif dir =='norm':
-                        result += np.sqrt(self.nodes[i].value[0] **2 + self.nodes[i].value[1] **2 * self.phis[i](x, y))
-            else:
-                U = np.zeros((self.n_nodes*2, 1))
-                for i in range(self.n_nodes):
-                    U[2*i] += self.nodes[i].value[0]
-                    U[2*i+1] += self.nodes[i].value[1]
-                dN = self.gradshape(x, y)
-                J = jacobian(self.vertices, dN)
-                B = self.B_matrix(J, dN)
-                strain_vector = B @ U
-                epsilon_x, epsilon_y, gamma_xy = strain_vector
-            if type == 'strain':
-                if dir == 'x':
-                    result += epsilon_x
-                elif dir == 'y':
-                    result += epsilon_y
-                elif dir == 'norm':
-                    result += np.sqrt(epsilon_x**2 + epsilon_y**2)
-                elif dir == 'xy':
-                    result += gamma_xy
+        if type == 'disp' :
+            result = np.zeros(2)
+            for i in range(self.n_nodes):
+                dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
+                dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
+                result+=np.array([dis_x, dis_y])
 
-            elif type == 'stress':
-                E, nu = self.E, self.nu
-                D = E / (1 - nu**2)* np.array([
-                    [1, nu, 0],
-                    [nu, 1, 0],
-                    [0, 0, (1-nu)/2]
-                ])
-                stress_vector = D @ strain_vector
-                sigma_x, sigma_y, tau_xy = stress_vector 
+        else:
+            U = np.zeros((self.n_nodes*2, 1))
+            for i in range(self.n_nodes):
+                U[2*i] += self.nodes[i].value[0]
+                U[2*i+1] += self.nodes[i].value[1]
+            dN = self.gradshape(x, y)
+            J = jacobian(self.vertices, dN)
+            B = self.B_matrix(J, dN)
+            strain_vector = B @ U
+            epsilon_x, epsilon_y, gamma_xy = strain_vector
+        if type == 'strain':
+            return strain_vector
 
-                if dir == 'x':
-                    result += sigma_x
-                elif dir == 'y':
-                    result += sigma_y
-                elif dir == 'norm':
-                    result += np.sqrt(sigma_x**2 + sigma_y**2)
-                elif dir == 'xy':
-                    result += tau_xy
-                elif dir == 'von':
-                    result += np.sqrt(sigma_x**2-sigma_x*sigma_y+sigma_y**2+3*tau_xy**2)
-        except Exception as e:
-            error_msg = f"Bug encountered with dir: {dir} and type: {type}. Error: {e}"
-            raise Exception(error_msg)
-
-        return result
+        elif type == 'stress':
+            E, nu = self.E, self.nu
+            D = E / (1 - nu**2)* np.array([
+                [1, nu, 0],
+                [nu, 1, 0],
+                [0, 0, (1-nu)/2]
+            ])
+            stress_vector = D @ strain_vector
+            sigma_x, sigma_y, tau_xy = stress_vector 
+            return stress_vector
 
     def calculate_area(self):
+
         if len(self.vertices) == 3:
             return triangle_area(*self.vertices)
         elif len(self.vertices) == 4:

@@ -26,14 +26,13 @@ def cal_energy(elements_list, GPN = 2):
         [nu, 1, 0],
         [0, 0, (1-nu)/2]
         ])
-    energy = 0
+    energy = 0 
     for elem in elements_list:
         U_list = np.zeros((2*elem.n_nodes, 1))
         points, Ws = Gauss_points(elem, GPN)
         scale = 4 if elem.shape=="triangle" else 1
         for i in range(elem.n_nodes) :
             node = elem.nodes[i]
-            U = node.value
             U_list[2*i] =   node.value[0]
             U_list[2*i+1] = node.value[1]
         elem_energy = 0
@@ -45,12 +44,12 @@ def cal_energy(elements_list, GPN = 2):
             J_inv = np.linalg.inv(J)
             J_det = np.linalg.det(J)
             B = elem.B_matrix(J, dN)
-            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * scale
+            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * scale #* J_det
         energy += elem_energy[0][0]
     return energy
 
 
-def cal_energy_exact(elements_list, GPN = 2):
+def cal_energy_exact(elements_list,a_b, GPN = 2):
     E = 200e3
     nu = 0.3
     D = E / (1 - nu**2)* np.array([
@@ -62,19 +61,24 @@ def cal_energy_exact(elements_list, GPN = 2):
     for elem in elements_list:
         elem_energy = 0
         points, Ws = Gauss_points(elem, GPN)
+        xys = elem.mapping(points)
         loop = 0
-        scale = 4 if elem.shape=="triangle" else 1
+        scale = 1 if elem.shape=="triangle" else 1
         for g in range(len(Ws)):
-            loc_xy = points[g]
+            xy = xys[g]
             W = Ws[g]
-            NP_net = elem.gradshape(loc_xy[0], loc_xy[1])
-            J = jacobian(vertices, NP_net)
-            xy = J @ loc_xy.T
-            stress_list = np.zeros((3,))
-            stress_list[0] = exact_fn(xy[0], xy[1], 'x')
-            stress_list[1] = exact_fn(xy[0], xy[1], 'y')
-            stress_list[2] = exact_fn(xy[0], xy[1], 'xy')
-            this_energy = 0.5 * W * stress_list.T @ np.linalg.inv(D) @ stress_list * scale
+            dN = elem.gradshape(xy[0], xy[0])
+            J = jacobian(elem.vertices, dN)
+            J_inv = np.linalg.inv(J)
+            J_det = np.linalg.det(J)
+            
+            stress_list = exact_fn(xy[0], xy[1], a_b)
+            strain_list = np.linalg.inv(D) @ stress_list
+            # this_energy = 0.5 * W * stress_list.T @ np.linalg.inv(D) @ stress_list * scale
+            # print(strain_list, stress_list)
+
+            this_energy = 0.5 * W * strain_list.T @ D @ strain_list * scale * elem.area 
+            # print(this_energy)
             elem_energy += this_energy 
             loop+=1
         energy+=elem_energy
@@ -97,28 +101,28 @@ def cal_energy_2(elements_list, GPN = 2):
         for g in range(len(Ws)):
             xy = points[g]
             W = Ws[g]
-            strain_list = np.zeros((3,))
-            strain_list[0] = elem(xy[0], xy[1], 'x', 'strain')
-            strain_list[1] = elem(xy[0], xy[1], 'y', 'strain')
-            strain_list[2] = elem(xy[0], xy[1], 'xy', 'strain')
+            strain_list = elem(xy[0], xy[1], 'strain')
             this_energy = 0.5 * W * strain_list.T @ D @ strain_list * scale
             elem_energy += this_energy 
             loop+=1
         energy+=elem_energy
-    return energy
+    return energy[0][0]
+
 def save_energy(data_ori, save=True):
     data_1 = []
     data_05 = []
     data_005 = []
     for i in range(len(data_ori)):
         elements_list = data_ori[i]['elements_list']
+        a_b = data_ori[i]['a_b']
         this_data = {}
         data_keys = list(data_ori[i].keys())[:4]
         for key in data_keys:
             if save:
                 print(key, data_ori[i][key])
             this_data[key] = data_ori[i][key]
-        this_data['energy'] = cal_energy(elements_list)
+        this_data['E_FEM'] = cal_energy_2(elements_list)
+        this_data['E_exa'] = cal_energy_exact(elements_list, a_b)
         if data_ori[i]['a_b'] == 1:
             data_1.append(this_data)
         elif data_ori[i]['a_b'] == 0.5:
@@ -126,8 +130,9 @@ def save_energy(data_ori, save=True):
         elif data_ori[i]['a_b'] == 0.05:
             data_005.append(this_data)
         if save == True:
-            print('energy', cal_energy(elements_list))
-    data_U = {'1':data_1, '05':data_05, '005':data_005}
+            print('E_FEM', this_data['E_FEM'] )
+            print('E_exa', this_data['E_exa'] )
+    data_U = {'1':data_1, '0.5':data_05, '0.05':data_005}
     if save:
         print("Energy data has been saved!")
         with open("Data/data_U.pkl", "wb") as f:
@@ -168,11 +173,26 @@ if __name__=='__main__':
         ])
     elements_list = data_ori[index]['elements_list']
     data_U = save_energy(data_ori, False)
+    U_post = {}
     for key in data_U.keys():
         U_1 = []
+        U_2 = []
         DOF_1 = []
+        elem_types = []
         for data in data_U[key]:
-            U_1.append(data['energy'])
+            # print(data)
+            U_1.append(data['E_FEM'])
+            U_2.append(data['E_exa'])
             DOF_1.append(data['DOF'])
+            elem_types.append(data['mesh_shape'])
+        print(U_1)
+        print(U_2)
         U_1_FEM = posterior_energy(U_1, DOF_1, 1)
-        print("The strain energy for a/b={} is {}".format(data_U[key][0]['a_b'], U_1_FEM))
+        U_post[key] = {'U':U_1_FEM, 'U_list':U_1, 'DOF':DOF_1, 'mesh_shapes':elem_types}
+        # U_2_exa = posterior_energy(U_2, DOF_1, 1)
+        U_2_exa = np.mean(U_2)
+        print("The strain energy in FEM for a/b={} is {}".format(data_U[key][0]['a_b'], U_1_FEM))
+        print("The DOF or a/b={} is {}".format(data_U[key][0]['a_b'], DOF_1))
+        # print("The strain energy in exact for a/b={} is {}".format(data_U[key][0]['a_b'], U_2_exa))
+    with open("Data/data_U_post.pkl", "wb") as f:
+        pickle.dump(U_post, f)
