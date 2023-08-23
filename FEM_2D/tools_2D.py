@@ -228,7 +228,10 @@ def principal_stresses(sigma_x, sigma_y, tau_xy):
 def output(input, dir, type='stress'):
     assert not (len(input) == 2 and dir not in ['x', 'y', 'norm']), "Invalid combination of input length and direction."
     assert type in ['disp', 'strain', 'stress'], "Invalid type"
-    sigma_x, sigma_y, tau_xy = input
+    if type == 'disp':
+        sigma_x, sigma_y = input
+    else:
+        sigma_x, sigma_y, tau_xy = input
     if dir == "x":
         return input[0]
     elif dir == "y":
@@ -238,7 +241,7 @@ def output(input, dir, type='stress'):
     
     elif dir == "norm":
         if len(input) ==2:
-            return np.norm(input)
+            return np.linalg.norm(input)
         else:
             sigma1, sigma2 = principal_stresses(sigma_x, sigma_y, tau_xy)
             return max(abs(sigma1), abs(sigma2))  # R

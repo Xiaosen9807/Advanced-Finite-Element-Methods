@@ -5,6 +5,7 @@ from shape_fns import *
 from Elements import *
 from tools_2D import *                
 import sys
+from scipy.optimize import minimize, fsolve
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
@@ -44,7 +45,7 @@ def cal_energy(elements_list, GPN = 2):
             J_inv = np.linalg.inv(J)
             J_det = np.linalg.det(J)
             B = elem.B_matrix(J, dN)
-            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * scale #* J_det
+            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * scale #*elem.area #* J_det
         energy += elem_energy[0][0]
     return energy
 
@@ -121,7 +122,7 @@ def save_energy(data_ori, save=True):
             if save:
                 print(key, data_ori[i][key])
             this_data[key] = data_ori[i][key]
-        this_data['E_FEM'] = cal_energy_2(elements_list)
+        this_data['E_FEM'] = cal_energy(elements_list)
         this_data['E_exa'] = cal_energy_exact(elements_list, a_b)
         if data_ori[i]['a_b'] == 1:
             data_1.append(this_data)
@@ -144,18 +145,33 @@ def posterior_energy(energy_list_array, DOFs_array, slope):
         raise AssertionError("The value of energy should be greater than three!")
     elif len(energy_list_array)!= len(DOFs_array):
         raise AssertionError("The number of energy values should be equal to the number of DOFs!")
+    def equation(U, U0, U1, U2, Q):
+        return (((U-U0)/(U-U1) - ((U-U1)/(U-U2))**Q ))**2
+        return (np.log(np.abs((U-U0)/(U-U1))) /( Q * np.log(np.abs((U-U1)/(U-U2)))))**2
 
     Bh = abs(slope)
     i = 0
     U_list = []
-    while i+3 < len(energy_list_array):
+    print("Energy", energy_list_array)
+    while i+3 <= len(energy_list_array):
         U0, U1, U2 = energy_list_array[i:i+3]
         h0, h1, h2 = 1/np.sqrt(DOFs_array[i:i+3])
+        # print(h0, h1, h2)
+        # h0, h1, h2  = [0.008, 0.004, 0.002]
+        N0, N1, N2 = DOFs_array[i:i+3]
         Q = np.log((h0/h1))/np.log((h1/h2))
-        lhs = lambda U: np.log(abs((U-U0)/(U-U1)))/np.log(abs((U-U1)/(U-U2)))
-        initial_guess = np.mean(energy_list_array[1:])
-        result = minimize(lhs, initial_guess)
-        U_list.append(result.x)
+        # Q = np.log((N1/N0))/np.log((N2/N1))
+        initial_guess = np.mean(energy_list_array)
+        # 使用 minimize
+        lower_bound = min(energy_list_array[i:i+3])
+        upper_bound = max(energy_list_array[i:i+3])
+
+        bounds = [(lower_bound*0.5,  upper_bound*2.)]
+
+        U_solution = minimize(equation, initial_guess, args=(U0, U1, U2, Q), bounds=bounds).x
+        # U_solution =fsolve(equation, initial_guess, args=(U0, U1, U2, Q)) 
+
+        U_list.append(U_solution )
         i+=1
     return np.mean(U_list)
 
@@ -175,24 +191,44 @@ if __name__=='__main__':
     data_U = save_energy(data_ori, False)
     U_post = {}
     for key in data_U.keys():
-        U_1 = []
+        print('\n')
+        print(key)
+        U_T = []
+        U_Q = []
         U_2 = []
-        DOF_1 = []
-        elem_types = []
+        DOF_Q = []
+        DOF_T = []
+        DOF_2 = []
+        mesh_size_T = []
+        mesh_size_Q = []
         for data in data_U[key]:
-            # print(data)
-            U_1.append(data['E_FEM'])
-            U_2.append(data['E_exa'])
-            DOF_1.append(data['DOF'])
-            elem_types.append(data['mesh_shape'])
-        print(U_1)
-        print(U_2)
-        U_1_FEM = posterior_energy(U_1, DOF_1, 1)
-        U_post[key] = {'U':U_1_FEM, 'U_list':U_1, 'DOF':DOF_1, 'mesh_shapes':elem_types}
-        # U_2_exa = posterior_energy(U_2, DOF_1, 1)
-        U_2_exa = np.mean(U_2)
-        print("The strain energy in FEM for a/b={} is {}".format(data_U[key][0]['a_b'], U_1_FEM))
-        print("The DOF or a/b={} is {}".format(data_U[key][0]['a_b'], DOF_1))
+            if data['mesh_shape'] == 'T3':
+                U_T.append(data['E_FEM'])
+                DOF_T.append(data['DOF'])
+                mesh_size_T.append(data['mesh_size'])
+            elif data['mesh_shape'] == 'Q4':
+                U_Q.append(data['E_FEM'])
+                DOF_Q.append(data['DOF'])
+                mesh_size_Q.append(data['mesh_size'])
+            else:
+                raise ValueError("Unknown mesh")
+            U_2.append(data['E_FEM'])
+            DOF_2.append(data['DOF'])
+        print('U_T', U_T)
+        print('U_Q', U_Q)
+        # print('U_2', U_2)
+        U_T_FEM = posterior_energy(U_T, DOF_T, 1)
+        U_Q_FEM = posterior_energy(U_Q, DOF_Q, 2)
+        U_2_exa = posterior_energy(U_2, DOF_2, 1)
+        U_post[key] = {'T3':{'U':U_T_FEM, 'U_exa':U_2_exa, 'U_list':U_T, 'DOF':DOF_T,'mesh_size':mesh_size_T}, 'Q4':{'U':U_Q_FEM,'U_exa':U_2_exa,  'U_list':U_Q, 'DOF':DOF_Q,'mesh_size':mesh_size_Q}}
+        # U_2_exa = np.mean(U_2)
+
+        print("The strain energy in FEM for a/b={} within T3 is {}".format(data_U[key][0]['a_b'], U_T_FEM))
+        print("The DOF or a/b={} within T3 is {}".format(data_U[key][0]['a_b'], DOF_T))
+        print("The strain energy in FEM for a/b={} within Q4 is {}".format(data_U[key][0]['a_b'], U_Q_FEM))
+        print("The DOF or a/b={} within Q4 is {}".format(data_U[key][0]['a_b'], DOF_Q))
+        print("\nThe energy or a/b={} within total is {}".format(data_U[key][0]['a_b'], U_2_exa))
+        # print("The strain energy in exact for a/b={} is {}".format(data_U[key][0]['a_b'], U_2_exa))
         # print("The strain energy in exact for a/b={} is {}".format(data_U[key][0]['a_b'], U_2_exa))
     with open("Data/data_U_post.pkl", "wb") as f:
         pickle.dump(U_post, f)

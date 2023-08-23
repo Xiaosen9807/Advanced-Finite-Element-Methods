@@ -192,6 +192,7 @@ class Element:
                 dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
                 dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
                 result+=np.array([dis_x, dis_y])
+            return result 
 
         else:
             U = np.zeros((self.n_nodes*2, 1))

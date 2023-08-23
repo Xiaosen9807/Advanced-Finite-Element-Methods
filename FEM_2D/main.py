@@ -32,14 +32,14 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
         element_nodes = element_nodes.reshape(-1, 4)
 
     for ele_lst in element_nodes:
-         this_nodes = [
+        this_nodes = [
             node for id in ele_lst for node in nodes_list if node.id == id]
-         try:
-               elem = Q4(this_nodes, GPN=GPN)
-         except:
-               elem = T3(this_nodes, GPN=GPN)
-         elem.a_b = a_b
-         element_list.append(elem)
+        try:
+            elem = Q4(this_nodes, GPN=GPN)
+        except:
+            elem = T3(this_nodes, GPN=GPN)
+        elem.a_b = a_b
+        element_list.append(elem)
     DOFs = 2*len(nodes_list)
     glo_K = np.zeros((DOFs, DOFs))
     glo_F = np.zeros(DOFs)
@@ -63,8 +63,7 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
                         global_dof_j = 2 * node_j.id + dof_j
 
                         # 组装到全局矩阵
-                        glo_K[global_dof_i][global_dof_j] += loc_K[2 *
-                                                                   i + dof_i][2*j + dof_j]
+                        glo_K[global_dof_i][global_dof_j] += loc_K[2 * i + dof_i][2*j + dof_j]
     for elem in element_list:  # Boundary condition
 
         for i, node_i in enumerate(elem.nodes):
@@ -107,47 +106,51 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
     return U, nodes_coord, copy.deepcopy(element_list)
 
 
-def draw(elements_list, dir='xy', type='disp'):
-   global_min = min([np.min([output(test_element(xy[0], xy[1], type), dir) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+def draw(elements_list, dir='xy', type='disp', show = True):
+    global_min = min([np.min([output(test_element(xy[0], xy[1], type), dir, type)
+                        for xy in test_element.sample_points(refine)]) for test_element in elements_list])
 
-   global_max = max([np.max([output(test_element(xy[0], xy[1], type), dir) for xy in test_element.sample_points(refine)]) for test_element in elements_list])
+    global_max = max([np.max([output(test_element(xy[0], xy[1], type), dir, type)
+                        for xy in test_element.sample_points(refine)]) for test_element in elements_list])
 
-   for test_element in elements_list:
-      test_inputs = test_element.sample_points(refine)
-      test_mapping = test_element.mapping(test_inputs)
-      test_output = [output(test_element(xy[0], xy[1], type), dir)
-                     for xy in test_inputs]
-      test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
-      # plt.scatter(test_mapping[:, 0], test_mapping[:, 1], s=1, c=test_output)
-      plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
-                                 test_mapping[:, 0].max(),
-                                 test_mapping[:, 1].min(),
-                                 test_mapping[:, 1].max()),
-                  origin='lower', aspect='auto',
-                  interpolation='none', cmap='jet',
-                  vmin=global_min, vmax=global_max)
-      # 绘制元素的边界
-      vertices = test_element.vertices
-      # 将第一个顶点再次添加到数组的末尾，以便封闭形状
-      vertices = np.vstack([vertices, vertices[0]])
-      vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
-      plt.plot(vertices_x, vertices_y,  color='white',
-               linewidth=0.7)  # 使用黑色线绘制边界，并使用小圆点表示顶点
+    for test_element in elements_list:
+        test_inputs = test_element.sample_points(refine)
+        test_mapping = test_element.mapping(test_inputs)
+        test_output = [output(test_element(xy[0], xy[1], type), dir, type)
+                        for xy in test_inputs]
+        test_x, test_y, test_z = grid_to_mat(test_mapping, test_output)
+        # plt.scatter(test_mapping[:, 0], test_mapping[:, 1], s=1, c=test_output)
+        plt.imshow(test_z, extent=(test_mapping[:, 0].min(),
+                                    test_mapping[:, 0].max(),
+                                    test_mapping[:, 1].min(),
+                                    test_mapping[:, 1].max()),
+                    origin='lower', aspect='auto',
+                    interpolation='none', cmap='jet',
+                    vmin=global_min, vmax=global_max)
+        # 绘制元素的边界
+        vertices = test_element.vertices
+        # 将第一个顶点再次添加到数组的末尾，以便封闭形状
+        vertices = np.vstack([vertices, vertices[0]])
+        vertices_x, vertices_y = zip(*vertices)  # 解压顶点坐标
+        plt.plot(vertices_x, vertices_y,  color='white',
+                linewidth=0.7)  # 使用黑色线绘制边界，并使用小圆点表示顶点
 
-   plt.xlim(0, 40)
-   plt.ylim(0, 40)
-   # Display the color bar
-   plt.colorbar()
-   plt.legend()
-   if type == 'disp':
-      type_str = 'U'
-   elif type == 'strain':
-      type_str = '\\epsilon'
-   elif type == 'stress':
-      type_str = '\\sigma'
-   dir_str = "{ %s }" % dir
-   plt.title(rf"${type_str}_{dir_str}$")
-   plt.show()
+    plt.xlim(0, 40)
+    plt.ylim(0, 40)
+    # Display the color bar
+    plt.colorbar()
+    if type == 'disp':
+        type_str = 'U'
+    elif type == 'strain':
+        type_str = '\\epsilon'
+    elif type == 'stress':
+        type_str = '\\sigma'
+    dir_str = "{ %s }" % dir
+    plt.title(rf"${type_str}_{dir_str}$")
+    plt.savefig('images/Q1_{}_{}_{}.png'.format(a_b, mesh_size, test_element.shape))
+    if show:
+        plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':
@@ -170,8 +173,7 @@ if __name__ == '__main__':
     for a_b in a_b_lst:
         for mesh_size in mesh_size_lst:
             for mesh_shape in mesh_shape_lst:
-                U, nodes_list, elements_list = FEM(a_b, mesh_size,
-                                                   mesh_shape, GPN, show)
+                U, nodes_list, elements_list = FEM(a_b, mesh_size, mesh_shape, GPN, show)
                 shape = 'Q4' if mesh_shape == 1 else 'T3'
                 this_data_dict = {'a_b': a_b, 'mesh_size': mesh_size,
                                   'mesh_shape': shape,
@@ -188,11 +190,15 @@ if __name__ == '__main__':
         with open("Data/data.pkl", "wb") as f:
             pickle.dump(data_dict, f)
     # Determine global min and max values
-    dir = 'xy'
-    type = 'strain'
+    dir = 'norm'
+    type = 'disp'
     with open("Data/data.pkl", "rb") as f:
         data_ori = pickle.load(f)
     save_energy(data_ori, save)
-
-    elements_list = data_ori[-1]['elements_list']
-    draw(elements_list, dir, type)
+    
+    for i in range(len(data_ori)):
+        elements_list = data_ori[i]['elements_list']
+        a_b = data_ori[i]['a_b']
+        mesh_size = data_ori[i]['mesh_size']
+        mesh_shape = data_ori[i]['mesh_shape']
+        draw(elements_list, dir, type, show =False)
