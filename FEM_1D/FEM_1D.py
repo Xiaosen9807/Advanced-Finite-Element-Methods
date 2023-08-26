@@ -78,7 +78,7 @@ def h_FEM(shape_class = linear, num_elems = 3,p=3, domain = (0, 1),rhs_func = rh
 
 
 def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
-    N=6
+    N=9
     mesh = np.linspace(domain[0], domain[1], num_elems+1)
     ori_phi_phip = {'phis': [], 'phips': []}
     for elem in range(num_elems):
@@ -103,7 +103,7 @@ def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs
         linear_K_sub = np.zeros((len(linear_phips), len(linear_phips)))
         for indx, x in np.ndenumerate(linear_K_sub):
             linear_K_sub[indx] = G_integrate(
-                mul(linear_phips[indx[0]], linear_phips[indx[-1]]), N=6, scale=linear_phips[indx[0]].scale)
+                mul(linear_phips[indx[0]], linear_phips[indx[-1]]), N=N, scale=linear_phips[indx[0]].scale)
             if abs(linear_K_sub[indx]) < 1e-10:
                 linear_K_sub[indx] = 0
         # print('K_sub', K_sub)
@@ -196,7 +196,7 @@ def cal_energy(U_array, phi_phip_array):
     # print(mesh)
     for i in range(len(mesh)-1):
         scale = [mesh[i], mesh[i+1]]
-        U_energy+=G_integrate(mul(plus(u_prime_list), plus(u_prime_list)),N=6, scale=scale)
+        U_energy+=G_integrate(mul(plus(u_prime_list), plus(u_prime_list)),N=9, scale=scale)
     # scale = [min(mesh), max(mesh)]
     # print(scale)
     # U_energy+=G_integrate(mul(plus(u_prime_list), plus(u_prime_list)),N=6, scale=scale)

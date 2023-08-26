@@ -35,47 +35,83 @@ def force(element, GPN=2):
             point = points[g]
             W = Ws[g]
             NP_net = element.gradshape(point[0], point[1])
-            J = jacobian(vertices, NP_net)
+            # J = jacobian(vertices, NP_net)
+            J = np.dot(NP_net, vertices)
+            J_det = np.linalg.det(J)
+            # print('J', J, J_det)
+            # print("J in F", J_det)
             for dof in range(2):
-                F[2*i+dof] += W * element.phis[i](point[0], point[1]) * np.linalg.det(J) 
-            
+                F[2*i+dof] += W * element.phis[i](point[0], point[1]) * abs(sum(J[dof]))# abs(sum(J[dof]))# J_det
     return F
     
+
+# def stiffness(element, GPN=2):
+#     points, Ws = Gauss_points(element, GPN)
+#     n_nodes = element.n_nodes
+#     vertices = element.vertices
+#     E = element.E
+#     nu = element.nu
+#     K = np.zeros((n_nodes*2, n_nodes*2))
+#     for i in range(n_nodes):
+#         for j in range(n_nodes):
+#             Kij = np.zeros((2, 2))
+#             for g in range(len(points)):
+#                 point = points[g]
+#                 W = Ws[g]
+#                 NP_net = element.gradshape(point[0], point[1])
+#                 J = np.dot(NP_net, vertices)
+#                 # J = jacobian(vertices, NP_net)
+#                 NP = np.linalg.inv(J) @ NP_net
+#                 for a in range((len(Kij))):
+#                     for c in range((len(Kij))):
+#                         for b in range(2):
+#                             for d in range(2):
+#                                 Kij[a, c]+= NP[b, i] * constitutive(a, b, c, d, E, nu) * NP[d, j] * np.linalg.det(J) * W
+
+#                 # print(left_v)
+#             K[2*i:2*(i+1), 2*j:2*(j+1)] = Kij
+
+#     K[np.abs(K) < 1e-10] = 0
+#     return K
+
 def stiffness(element, GPN=2):
+    E, nu =element.E, element.nu
+    D = E / (1 - nu**2)* np.array([
+                [1, nu, 0],
+                [nu, 1, 0],
+                [0, 0, (1-nu)/2]
+            ]) # Plain Stress
     points, Ws = Gauss_points(element, GPN)
     n_nodes = element.n_nodes
     vertices = element.vertices
     E = element.E
     nu = element.nu
-    K = np.zeros((n_nodes*2, n_nodes*2))
-    for i in range(n_nodes):
-        for j in range(n_nodes):
-            Kij = np.zeros((2, 2))
-            for g in range(len(points)):
-                point = points[g]
-                W = Ws[g]
-                NP_net = element.gradshape(point[0], point[1])
-                J = jacobian(vertices, NP_net)
-                NP = np.linalg.inv(J).T @ NP_net.T
-                # print(NP)
-                for a in range((len(Kij))):
-                    for c in range((len(Kij))):
-                        for b in range(2):
-                            for d in range(2):
-                                Kij[a, c]+= NP[b, i] * constitutive(a, b, c, d, E, nu) * NP[d, j] * np.linalg.det(J) * W
-
-                # print(left_v)
-            K[2*i:2*(i+1), 2*j:2*(j+1)] = Kij
-
-    K[np.abs(K) < 1e-10] = 0
-    return K
-
+    Ke = np.zeros((n_nodes*2, n_nodes*2))
+    B = np.zeros((3,2*n_nodes))
+    
+    scale = 1 if element.shape == 'quad' else 1/2
+    for g in range(len(points)):
+        point = points[g]
+        W = Ws[g]
+        NP_net = element.gradshape(point[0], point[1])
+        # J = jacobian(vertices, NP_net)
+        J = np.dot(NP_net, vertices)
+        J_det = np.linalg.det(J)
+        # print('J', J,J.T, J_det)
+        # print("J in K", J_det)
+        # print("J = ", np.linalg.det(jacobian(vertices, NP_net.T)))
+        B = element.B_matrix(J, NP_net)
+        # dN = np.linalg.inv(J) @ NP_net
+        Ke += scale * W * B.T @ D @ B * J_det
+        # print(np.linalg.det(J))
+        # Ke += np.dot(np.dot(B.T,D),B) * np.linalg.det(J) * W
+    return Ke
 
 class Node:
     def __init__(self, xy, id=0):
         self.xy = xy
         self.id=id
-        self.value = np.zeros(2)
+        self.value = np.ones(2)
         self.type='center'
         self.BC = [0, 0] # -1: Neumann, 1: Dirichlet
         assert self.type in ['center','ellipse' 'le','re', 'be', 'te', 'ltc', 'rtc',
@@ -85,7 +121,7 @@ class Node:
 
 class Element:
     def __init__(self, nodes, E=200e3, nu=0.3, A=40, id=0, GPN=3):
-        # E = 2000Mpa, nu = 0.3, A=4omm2
+        # E = 2000Mpa, nu = 0.3, A=40mm2
         self.E = E
         self.nu = nu
         self.A = A
@@ -103,34 +139,45 @@ class Element:
         self.phis = [T3_phi([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipxs = [T3_phipx([0, 1], [0, 1], p) for p in range(len(self.nodes))]
         self.phipys = [T3_phipy([0, 1], [0, 1], p) for p in range(len(self.nodes))]
-        self.K = np.zeros((self.n_nodes, self.n_nodes))
         self.shape = 'init'
         self.scale_xi = [0, 1]
         self.scale_eta = [0, 1]
         self.xi_eta = np.array([[1, 0], [0, 1], [0, 0]])
         self.GPN = GPN
     def gradshape(self, xi, eta):
-        dN =np.zeros((self.n_nodes, 2)) 
+        # dN =np.zeros((self.n_nodes, 2)) 
+        # for i in range(self.n_nodes):
+        #     dN[i, 0] = self.phipxs[i](xi, eta)
+        #     dN[i, 1] = self.phipys[i](xi, eta)
+        dN =np.zeros((2, self.n_nodes)) 
         for i in range(self.n_nodes):
-            dN[i, 0] = self.phipxs[i](xi, eta)
-            dN[i, 1] = self.phipys[i](xi, eta)
+            dN[0, i] = self.phipxs[i](xi, eta)
+            dN[1, i] = self.phipys[i](xi, eta)
+
         return dN
+
     def B_matrix(self, J, dN):
         B = np.zeros((3, 2*self.n_nodes))
-        J_inv = np.linalg.inv(J)
-        M = J_inv.T @ dN.T
-        for i in range(3):
-            for j in range(self.n_nodes):  # 注意：这里我们只循环到n_nodes，因为我们每次都会处理两列
-                col = 2*j  # 2*j是偶数列
-                if i == 0:  # epsilon_11
-                    B[i][col] = M[0][j]
-                elif i == 1:  # epsilon_22
-                    B[i][col+1] = M[1][j]
-                elif i == 2:  # epsilon_12
-                    B[i][col] = M[1][j]
-                    B[i][col+1] = M[0][j]
-        # print('B', B)
+        dN = np.linalg.inv(J) @ dN
+        B[0,0::2] = dN[0, :]
+        B[1,1::2] = dN[1, :]
+        B[2,0::2] = dN[1, :]
+        B[2,1::2] = dN[0, :]
         return B
+        # B = np.zeros((3, 2*self.n_nodes))
+        # J_inv = np.linalg.inv(J)
+        # M = J_inv.T @ dN.T
+        # for i in range(3):
+        #     for j in range(self.n_nodes):  # 注意：这里我们只循环到n_nodes，因为我们每次都会处理两列
+        #         col = 2*j  # 2*j是偶数列
+        #         if i == 0:  # epsilon_11
+        #             B[i][col] = M[0][j]
+        #         elif i == 1:  # epsilon_22
+        #             B[i][col+1] = M[1][j]
+        #         elif i == 2:  # epsilon_12
+        #             B[i][col] = M[1][j]
+        #             B[i][col+1] = M[0][j]
+        # return B
  
  
     def mapping(self, xi_eta):
@@ -189,9 +236,9 @@ class Element:
         if type == 'disp' :
             result = np.zeros(2)
             for i in range(self.n_nodes):
-                dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
-                dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
-                result+=np.array([dis_x, dis_y])
+                # dis_x =  self.nodes[i].value[0] * self.phis[i](x, y)
+                # dis_y =  self.nodes[i].value[1] * self.phis[i](x, y) 
+                result+=np.array(self.nodes[i].value * self.phis[i](x, y))
             return result 
 
         else:
@@ -200,7 +247,8 @@ class Element:
                 U[2*i] += self.nodes[i].value[0]
                 U[2*i+1] += self.nodes[i].value[1]
             dN = self.gradshape(x, y)
-            J = jacobian(self.vertices, dN)
+            # J = jacobian(self.vertices, dN)
+            J = np.dot(dN , self.vertices)
             B = self.B_matrix(J, dN)
             strain_vector = B @ U
             epsilon_x, epsilon_y, gamma_xy = strain_vector

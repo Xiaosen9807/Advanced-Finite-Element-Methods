@@ -40,12 +40,14 @@ def cal_energy(elements_list, GPN = 2):
         for g in range(len(Ws)):
             xy = points[g]
             W = Ws[g]
-            dN = elem.gradshape(xy[0], xy[0])
-            J = jacobian(elem.vertices, dN)
+            # dN = elem.gradshape(xy[0], xy[0])
+            # J = jacobian(elem.vertices, dN)
+            NP_net = elem.gradshape(xy[0],xy[1])
+            J = np.dot(NP_net, elem.vertices)
             J_inv = np.linalg.inv(J)
             J_det = np.linalg.det(J)
-            B = elem.B_matrix(J, dN)
-            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * scale #*elem.area #* J_det
+            B = elem.B_matrix(J, NP_net)
+            elem_energy+=0.5 * W * U_list.T @ B.T @ D @ B @ U_list * J_det#* scale *elem.area 
         energy += elem_energy[0][0]
     return energy
 
@@ -69,7 +71,8 @@ def cal_energy_exact(elements_list,a_b, GPN = 2):
             xy = xys[g]
             W = Ws[g]
             dN = elem.gradshape(xy[0], xy[0])
-            J = jacobian(elem.vertices, dN)
+            # J = jacobian(elem.vertices, dN)
+            J = np.dot(dN, elem.vertices).T
             J_inv = np.linalg.inv(J)
             J_det = np.linalg.det(J)
             
@@ -78,7 +81,7 @@ def cal_energy_exact(elements_list,a_b, GPN = 2):
             # this_energy = 0.5 * W * stress_list.T @ np.linalg.inv(D) @ stress_list * scale
             # print(strain_list, stress_list)
 
-            this_energy = 0.5 * W * strain_list.T @ D @ strain_list * scale * elem.area 
+            this_energy = 0.5 * W * strain_list.T @ D @ strain_list * scale * J_det # * elem.area 
             # print(this_energy)
             elem_energy += this_energy 
             loop+=1
@@ -103,7 +106,12 @@ def cal_energy_2(elements_list, GPN = 2):
             xy = points[g]
             W = Ws[g]
             strain_list = elem(xy[0], xy[1], 'strain')
-            this_energy = 0.5 * W * strain_list.T @ D @ strain_list * scale
+            dN = elem.gradshape(xy[0], xy[1])
+            # J = jacobian(self.vertices, dN)
+            J = np.dot(dN , elem.vertices)
+            J_det = np.linalg.det(J)
+            B = elem.B_matrix(J, dN)
+            this_energy = 0.5 * W * strain_list.T @ D @ strain_list * J_det #* scale
             elem_energy += this_energy 
             loop+=1
         energy+=elem_energy
@@ -122,7 +130,7 @@ def save_energy(data_ori, save=True):
             if save:
                 print(key, data_ori[i][key])
             this_data[key] = data_ori[i][key]
-        this_data['E_FEM'] = cal_energy(elements_list)
+        this_data['E_FEM'] = cal_energy_2(elements_list)
         this_data['E_exa'] = cal_energy_exact(elements_list, a_b)
         if data_ori[i]['a_b'] == 1:
             data_1.append(this_data)
@@ -146,8 +154,8 @@ def posterior_energy(energy_list_array, DOFs_array, slope):
     elif len(energy_list_array)!= len(DOFs_array):
         raise AssertionError("The number of energy values should be equal to the number of DOFs!")
     def equation(U, U0, U1, U2, Q):
-        return (((U-U0)/(U-U1) - ((U-U1)/(U-U2))**Q ))**2
-        return (np.log(np.abs((U-U0)/(U-U1))) /( Q * np.log(np.abs((U-U1)/(U-U2)))))**2
+        # return (((U-U0)/(U-U1) - ((U-U1)/(U-U2))**Q ))**2
+        return (np.log(np.abs((U-U0)/(U-U1))) / ( Q * np.log(np.abs((U-U1)/(U-U2))))-1)**2
 
     Bh = abs(slope)
     i = 0
@@ -166,7 +174,7 @@ def posterior_energy(energy_list_array, DOFs_array, slope):
         lower_bound = min(energy_list_array[i:i+3])
         upper_bound = max(energy_list_array[i:i+3])
 
-        bounds = [(lower_bound*0.5,  upper_bound*2.)]
+        bounds = [(lower_bound,  upper_bound*2.)]
 
         U_solution = minimize(equation, initial_guess, args=(U0, U1, U2, Q), bounds=bounds).x
         # U_solution =fsolve(equation, initial_guess, args=(U0, U1, U2, Q)) 

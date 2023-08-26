@@ -105,7 +105,14 @@ class Q4_phipy(shape_fns):
             return (1 - xi)/4
         else:
             raise ValueError("p should be 0, 1, 2 or 3 in Q4 element shape functions, not {}".format(self.p))
-def exact_fn(x, y,a_b):
+def exact_fn(x, y,a_b, type='stress'):
+
+    E, nu = 200e3, 0.3
+    D = E / (1 - nu**2)* np.array([
+        [1, nu, 0],
+        [nu, 1, 0],
+        [0, 0, (1-nu)/2]
+            ])
     b = 20
     a = b*a_b
     sigma_0 = 50 #Mpa
@@ -130,7 +137,15 @@ def exact_fn(x, y,a_b):
     sigma_y = sigma_0*(-rho_a*rho_b*(H_2/2 -(b/a+0.5)*H_1))
     tau_xy = sigma_0*(-rho_a*rho_b*(H_3/2 -(b/a+0.5)*H_5))
     
-    return np.array([sigma_x, sigma_y, tau_xy])
+    stress_vector = np.array([sigma_x, sigma_y, tau_xy])
+    strain_vector = np.linalg.inv(D) @ stress_vector.T
+
+    if type == 'stress':
+        return stress_vector
+    elif type == 'strain':
+        return strain_vector
+    else:
+        raise ValueError('Unknown type: {}'.format(type))
  
 class rhs_fn(shape_fns):
     def __init__(self, scale_x=[0, 40], scale_y=[0, 40]):

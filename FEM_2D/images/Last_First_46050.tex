@@ -174,15 +174,15 @@ The formula for the convergence rate can be found in Eq.\ref{eq:rate}, which can
 \end{equation}
 
 \subsection{Question 2}
-In the log-log plot in Fig.\ref{fig:h_p_error} of the relative error in the energy norm versus the number of DOFs, the slopes of the plotted lines represent these rates. The inclusion of h-version plots in the same figure provides a comparative perspective, showcasing the efficiency and accuracy of each method relative to the other.
+In the log-log plot in Fig.\ref{fig:h_p_error} of the relative error in the energy norm versus the number of DOFs, the slopes of the plotted lines represent these rates. 
 
 Given the computed convergence rates for the different finite element methods, we observe the following rates:
 \begin{itemize}
     \item For Linear h-FEM: The rate of convergence is approximately -1.045.
     \item For Quadratic h-FEM: The rate of convergence is approximately -2.076.
-    \item For p-FEM: The rate of convergence is approximately -8.245.
+    \item For p-FEM: The rate of convergence is approximately -8.230.
 \end{itemize}
-The negative values for the convergence rates indicate that the error decreases as the number of DOFs increases, which is expected in a convergence study. From the rates, it's evident that the p-FEM has the steepest convergence, indicating a faster reduction in error with increasing DOFs compared to the other methods. 
+The negative values for the convergence rates indicate that the error decreases as the number of DOFs increases, which is expected in a convergence study. Notably, the rate of convergence of the linear element is close to 1, and the quadratic element is close to 2, respectively, which indicates that the convergence rate of h-FEM is equal to the polynomial order. From the rates, it's evident that the p-FEM has the steepest convergence, indicating a faster reduction in error with increasing DOFs compared to the other methods. 
 
 \begin{figure}[!ht]
   \centering
@@ -288,7 +288,7 @@ By repeatedly applying the aforementioned process for multiple mesh sizes and av
       \hline
       Linear & 0.034626674 & 2.7117($\%$) \\
       \hline
-      Quadratic & 0.035591726 & 0.00132($\%$) \\
+      Quadratic & 0.035591726 & 0.000314($\%$) \\
       \hline
       Exact solution & 0.035591838 & $/$ \\
       \hline
@@ -300,7 +300,7 @@ Certainly, based on the table provided, here's a suitable answer:
 
 The table.\ref{tab:fem_values} presents the energy values obtained using different Finite Element Methods (FEM) and their respective relative errors when compared to the exact solution. 
 
-For the linear FEM, the energy is computed to be \(0.03463\), which results in a relative error of \(2.7117\%\). This indicates a slight deviation from the exact solution. On the other hand, the quadratic FEM provides an energy value of \(0.03559\), which is extremely close to the exact solution with a minuscule relative error of \(0.00132\%\). This suggests that the quadratic FEM is significantly more accurate than the linear FEM for this problem. The exact solution, as expected, has an energy of \(0.03559\) with no relative error.
+For the linear FEM, the energy is computed to be \(0.03463\), which results in a relative error of \(2.7117\%\). This indicates a slight deviation from the exact solution. On the other hand, the quadratic FEM provides an energy value of \(0.03559\), which is extremely close to the exact solution with a minuscule relative error of \(0.000314\%\). This suggests that the quadratic FEM is significantly more accurate than the linear FEM for this problem. 
 
 In summary, while the linear FEM offers a reasonable approximation, the quadratic FEM provides an almost exact match to the true solution in terms of energy.
 
@@ -324,9 +324,9 @@ In the h-version study using the quadratic finite element method, we analyzed th
 \end{figure}
 
 \subsection{Question 5}
-In the p-version study, the problem was analyzed using 5 elements with polynomial degrees ranging from \( p = 1 \) to \( p = 5 \). The numerical solutions obtained were juxtaposed against the exact solution, providing a comprehensive understanding of the precision of our approach, as depicted in Fig.\ref{fig:p_5}. Further insights were gleaned from the log-log plot showcasing the relative error in the energy norm against the number of DOFs, illustrated in Fig.\ref{fig:h_p_error_5}. 
+% In the p-version study, the problem was analyzed using 5 elements with polynomial degrees ranging from \( p = 1 \) to \( p = 5 \). The numerical solutions obtained were juxtaposed against the exact solution, providing a comprehensive understanding of the precision of our approach, as depicted in Fig.\ref{fig:p_5}. Further insights were gleaned from the log-log plot showcasing the relative error in the energy norm against the number of DOFs, illustrated  
 
-From the log-log plot, the computed rate of convergence for the p-version was approximately \(-0.305\), whereas for the h-version, it was \(-2.2122\). The convergence rate of quadratic h-FEM is faster than p-FEM in this problem. However, for a comparable range of DOFs (specifically from 11 to 21 DOFs), the p-version displayed a lower error than the h-version. This underscores the efficacy of the p-version in yielding more accurate results with fewer degrees of freedom.
+From the log-log plot in Fig.\ref{fig:h_p_error_5}, the computed rate of convergence for the p-version was approximately \(-4.882\), whereas for the h-version, it was \(-2.2122\). The convergence rate of quadratic p-FEM is faster than h-FEM in this problem.  As a result, the p-FEM can achieve higher accuracy with fewer degrees of freedom.
 
 \begin{figure}[!ht]
   \centering
@@ -343,7 +343,22 @@ From the log-log plot, the computed rate of convergence for the p-version was ap
 \end{figure}
 
 \subsection{Question 6}
-Log-log plot for the condition number of the reduced matrix $K_{ff}$ versus energy norm error for the h-FEM and p-FEM results is represented in Fig.\ref{fig:contK}.
+
+The stability of numerical methods in finite element analysis can be assessed using the condition number of the stiffness matrix.
+
+Observing the log-log plot in Fig.\ref{fig:contK}:
+\begin{itemize}
+    \item \textbf{p-FEM}: The condition number remains constant regardless of the DOFs increase, indicating its robustness.
+    
+    \item \textbf{Quadratic h-FEM}: Condition number growth is consistent with increasing DOFs and is unaffected by equation parameter changes (both for \(a=0.5\) and \(a=50\)).
+    
+    \item \textbf{Linear vs Quadratic h-FEM}: Both show similar growth trends, but the linear version has a slightly lower condition number for similar DOFs.
+\end{itemize}
+
+In summary, p-FEM stands out in stability, while h-FEM versions show predictable growth trends, with the linear version in slightly better condition.
+
+
+
 \begin{figure}[!ht]
   \centering
   \includegraphics[width=1.\linewidth]{Q1/cont_K.png}
@@ -357,7 +372,7 @@ Log-log plot for the condition number of the reduced matrix $K_{ff}$ versus ener
 From the results obtained, several conclusions can be drawn regarding the behavior of the finite element methods under study, especially in problems with strong gradients or sharp features.
 
 \begin{itemize}
-    \item \textbf{Convergence Rate and Accuracy}: The convergence rate, represented as the slope of the log-log plot, provides insights into the efficacy of the different finite element methods. The error decreased with the increase of the DOFs and the decrease of the mesh size. Notably, the quadratic elements exhibited a more significant convergence rate than the linear ones, reflecting the theoretical expectations.
+    \item \textbf{Convergence Rate and Accuracy}: The convergence rate, represented as the slope of the log-log plot, provides insights into the efficacy of the different finite element methods. The error decreased with the increase of the DOFs and the decrease of the mesh size. Notably, the quadratic elements exhibited a more significant convergence rate than the linear ones, reflecting the theoretical expectations. Meanwhile, the rate of convergence for h-FEM is equal to the polynomial order.
     
     \item \textbf{Linear h-version}: For the linear FEM, the energy was computed to be somewhat deviated from the exact solution, especially in problems with sharp features. This indicates that while the linear h-FEM offers a reasonable approximation, there's a clear margin for improvement in accuracy for such problems.
     
@@ -367,10 +382,251 @@ From the results obtained, several conclusions can be drawn regarding the behavi
     
     \item \textbf{Effect of Strong Gradients}: For problems with strong gradients or sharp features, the quadratic FEM is better suited due to its adaptability and ability to capture local variations more accurately.
     
+    \item \textbf{Stability and Robustness}: The stability of finite element methods, assessed by the condition number of the stiffness matrix, highlighted the robustness of the p-FEM. Its condition number remains invariant with increasing DOFs, ensuring consistent performance. On the other hand, the h-FEM versions, both linear and quadratic, exhibit predictable growth in condition numbers, with the linear version showing a slight edge in conditioning. The quadratic h-FEM's stability remains consistent even with changes in equation parameters.
+    
 \end{itemize}
 
 \subsubsection{Quadrature Points and Computation Efficiency}
-Regarding the Gauss quadrature points, six points were chosen for the finite element computations. The rationale behind this choice was twofold. Firstly, the use of a higher number of Gauss points typically results in increased precision during integration, thus ensuring more accurate results. Secondly, given the efficiency of the computational setup, the addition of these extra points did not noticeably affect the overall computational time. As such, opting for six Gauss points struck a balance between computational efficiency and the desire for enhanced accuracy in the results.
+In p-FEM, higher-order shape functions demand precise integral evaluations, achieved effectively with Gauss quadrature. Given the complexity of these functions, 9 Gauss points were selected to ensure accurate integration of non-linear shape functions. While more Gauss points increase precision, they also require more computational effort. Nonetheless, for our specific setup, the added computational time was minimal, making the choice justifiable for enhanced accuracy without sacrificing efficiency.
+
+\section{\textbf{PRMBLEM 2}}
+\subsection{Questions 1}
+For the mesh size $h/L=0.05$ and Q4 mesh, the displacement fields for different a/b are represented in Fig.\ref{fig:disp}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}[c]{0.32\textwidth}
+    \centering
+    \includegraphics[width=1.\linewidth]{Q2_1/Q1_1_2_quad.png}
+    \caption{Displacement field for a/b=1}
+    \label{fig:disp_1}
+  \end{subfigure} 
+  \hfill
+  \begin{subfigure}[c]{0.32\textwidth}
+    \centering
+    \includegraphics[width=1.\linewidth]{Q2_1/Q1_0.5_2_quad.png}
+    \caption{Displacement field for a/b=0.5}
+    \label{fig:disp_05}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[c]{0.32\textwidth}
+    \centering
+    \includegraphics[width=1.\linewidth]{Q2_1/Q1_0.05_2_quad.png}
+    \caption{Displacement field for a/b=0.05}
+    \label{fig:disp_005}
+  \end{subfigure}
+  \caption{ displacement fields for different a/b : (a) a/b=1; (b) a/b=0.5; and (c) a/b=0.05.}
+  \label{fig:disp}  
+\end{figure} 
+
+\subsection{Question 2}
+Considering a plate subjected to plane stress conditions, we assume the following material properties and dimensions:
+\begin{itemize}
+    \item Young's Modulus, \( E = 200 \) GPa.
+    \item Poisson's ratio, \( \nu = 0.3 \).
+    \item Plate thickness, \( h = 1 \) mm.
+\end{itemize}
+Given the applied total force \( P = 2000 \) N and side length \( L = b = 40 \) mm, we aim to estimate the displacements.
+
+The stress in the x-direction due to the applied force is:
+\begin{equation}
+\sigma_x = \frac{P}{h \times b}
+\end{equation}
+
+No force in the y-direction implies \( \sigma_y = 0 \).
+
+The strains in the x and y directions, under plane stress conditions, are:
+\begin{equation}
+\begin{aligned}
+\epsilon_x &= \frac{1}{E} (\sigma_x - \nu \sigma_y) \\
+\epsilon_y &= \frac{1}{E} (\sigma_y - \nu \sigma_x)
+\end{aligned}
+\end{equation}
+
+Using the strains, the displacements at the boundaries are estimated as:
+
+\begin{equation}
+\begin{aligned}
+u_x(L, 0) &= \epsilon_x \times L \\
+u_y(0, L) &= \epsilon_y \times L
+\end{aligned}
+\end{equation}
+
+The estimated displacements at the boundaries are:
+\begin{equation}
+\begin{aligned}
+u_x(L, 0) &\approx 0.01 \, \text{mm} \\
+u_y(0, L) &\approx -0.003 \, \text{mm}
+\end{aligned}
+\end{equation}
+
+The above displacements are approximations based on plane stress and linear elasticity assumptions.
+
+
+\subsection{Question 4}
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.\linewidth]{Q2_4/log_DOFs.png}
+  \caption{Log-log plot of energy norm error versus DOFs.}
+  \label{fig:logDOF_Q2_4}
+\end{figure}
+
+\subsection{Question 5}
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_x_triangle.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_tri_1}
+  \end{subfigure}%
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_y_triangle.png}
+    \caption{$\sigma_{yy}$ }
+    \label{fig:y_tri_1}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_xy_triangle.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_tri_1}
+  \end{subfigure}%
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_von_triangle.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_tri_1}
+  \end{subfigure}
+  \caption{Stress fields for a/b=1 with T3 mesh.}
+  \label{fig:tri_1}
+\end{figure}
+
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_x_quad.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_quad}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_y_quad.png}
+    \caption{$\sigma_{yy}$}
+    \label{fig:y_quad}
+  \end{subfigure}%  
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_xy_quad.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_quad}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_von_quad.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_quad}
+  \end{subfigure}
+  \caption{Stress fields for a/b=1 with Q4 mesh.}
+  \label{fig:quad_1}
+\end{figure}
+
+
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_x_triangle.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_triangle_0.5}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_y_triangle.png}
+    \caption{$\sigma_{yy}$}
+    \label{fig:y_triangle_0.5}
+  \end{subfigure}%  
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_xy_triangle.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_triangle_0.5}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_von_triangle.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_triangle_0.5}
+  \end{subfigure}
+  \caption{Stress fields for a/b=0.5 with T3 mesh.}
+  \label{fig:triangle_0.5}
+\end{figure}
+
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_x_quad.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_quad_0.5}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_y_quad.png}
+    \caption{$\sigma_{yy}$}
+    \label{fig:y_quad_0.5}
+  \end{subfigure}%  
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_xy_quad.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_quad_0.5}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.5_von_quad.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_quad_0.5}
+  \end{subfigure}
+  \caption{Stress fields for a/b=0.05 with Q4 mesh.}
+  \label{fig:quad_0.5}
+\end{figure}
+
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_x_triangle.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_triangle_0.05}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_y_triangle.png}
+    \caption{$\sigma_{yy}$}
+    \label{fig:y_triangle_0.05}
+  \end{subfigure}%  
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_xy_triangle.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_triangle_0.05}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_von_triangle.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_triangle_0.05}
+  \end{subfigure}
+  \caption{Stress fields for a/b=0.5 with T3 mesh.}
+  \label{fig:triangle_0.05}
+\end{figure}
+
+\begin{figure}[!ht]
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_x_quad.png}
+    \caption{$\sigma_{xx}$}
+    \label{fig:x_quad_0.05}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_y_quad.png}
+    \caption{$\sigma_{yy}$}
+    \label{fig:y_quad_0.05}
+  \end{subfigure}%  
+  \hfill
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_xy_quad.png}
+    \caption{$\sigma_{xy}$}
+    \label{fig:xy_quad_0.05}
+  \end{subfigure}%  
+  \begin{subfigure}[c]{0.26\textwidth}
+    \includegraphics[width=1.\linewidth]{Q2_5/Q5_0.05_von_quad.png}
+    \caption{$\sigma_{von \, mise}$}
+    \label{fig:von_quad_0.05}
+  \end{subfigure}
+  \caption{Stress fields for a/b=0.05 with Q4 mesh.}
+  \label{fig:quad_0.05}
+\end{figure}
 
 
 %------------------------------------------------
@@ -467,11 +723,8 @@ Equations can be written using hte \texttt{equation} environment:
 \end{equation}
 Notice the notation for scalars, vectors, and tensors. In addition, you can use $\grad, \div$ to denote gradient and divergence. 
 If you need to align equations, you can use the \texttt{align} environment:
-\begin{align}
-  \dd{x} && \dv{x} && \dv{f}{x} && \dv[n]{f}{x}, \label{derivatives} \\
-   && \pdv{x} &&  \pdv{f}{x} && \pdv[n]{f}{x}. \label{partial}
-\end{align} 
-Here you also have the syntax for braces and (partial) derivatives. Equations can also be referred with~\eqref{derivatives} and~\eqref{partial}. If a single equation number is needed for an equation spanning multiple lines, use the \texttt{aligned} environment inside the \texttt{equation} environment:
+
+
 \begin{equation} \label{eq:alignment}
 \begin{aligned}	
   \abs{a} && \norm{b},  \\
@@ -552,9 +805,10 @@ The discussion is a very important part of the report, so make sure you write it
 %%\newpage
 %%\bibliographystyle{apacite}
 %%\bibliography{sample}
-\bibliographystyle{plain} % or another suitable bibliography style
+\bibliographystyle{apacite} % or another suitable bibliography style
 \bibliography{ref.bib} % the name of your .bib file without the extension
 % Start the appendix
+\newpage
 \appendix
 \section{Finite elements methods in 1-D main codes}
 \label{Apdx:FEM_1D}
