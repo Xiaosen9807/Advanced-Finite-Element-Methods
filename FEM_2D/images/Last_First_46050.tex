@@ -53,6 +53,7 @@
 \renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
 \titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
 \titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+\usepackage{float}
 
 \usepackage{fancyhdr} % Headers and footers
 \pagestyle{fancy} % All pages have headers and footers
@@ -423,49 +424,127 @@ The code for finite element method, shape functions as well as the Gaussian inte
 \end{figure} 
 
 \subsection{Question 2}
-Considering a plate subjected to plane stress conditions, we assume the following material properties and dimensions:
-\begin{itemize}
-    \item Young's Modulus, \( E = 200 \) GPa.
-    \item Poisson's ratio, \( \nu = 0.3 \).
-    \item Plate thickness, \( h = 1 \) mm.
-\end{itemize}
-Given the applied total force \( P = 2000 \) N and side length \( L = b = 40 \) mm, we aim to estimate the displacements.
 
-The stress in the x-direction due to the applied force is:
-\begin{equation}
-\sigma_x = \frac{P}{h \times b}
-\end{equation}
-
-No force in the y-direction implies \( \sigma_y = 0 \).
-
-The strains in the x and y directions, under plane stress conditions, are:
-\begin{equation}
-\begin{aligned}
-\epsilon_x &= \frac{1}{E} (\sigma_x - \nu \sigma_y) \\
-\epsilon_y &= \frac{1}{E} (\sigma_y - \nu \sigma_x)
-\end{aligned}
-\end{equation}
-
-Using the strains, the displacements at the boundaries are estimated as:
+The accurate stress solution at each point is computed using the given formula \cite{jin2014solution}. This is then multiplied by the inverse of the stiffness matrix \(C\) in plain stress assumption, which is given by:
 
 \begin{equation}
-\begin{aligned}
-u_x(L, 0) &= \epsilon_x \times L \\
-u_y(0, L) &= \epsilon_y \times L
-\end{aligned}
+C = \frac{E}{1 - \nu^2} \begin{pmatrix}
+    1 & \nu & 0 \\
+    \nu & 1 & 0 \\
+    0 & 0 & \frac{1-\nu}{2}
+\end{pmatrix}
 \end{equation}
 
-The estimated displacements at the boundaries are:
-\begin{equation}
-\begin{aligned}
-u_x(L, 0) &\approx 0.01 \, \text{mm} \\
-u_y(0, L) &\approx -0.003 \, \text{mm}
-\end{aligned}
-\end{equation}
+to obtain the strain at each point. Due to the presence of an ellipse in the middle of the plate, the displacements are simplified as follows:
+\[
+\epsilon_x(L,0) = \epsilon_x(L,0) + \epsilon_x(L,L),
+\]
+\[
+\epsilon_y(L,0) = \epsilon_y(L,0) + \epsilon_y(L,L).
+\]
+The displacements are then approximated as \(\text{displacement} = \text{strain} \times 40\).
 
-The above displacements are approximations based on plane stress and linear elasticity assumptions.
+The results and relative error are tabulated in Table.\ref{tab:U_eaxvsfem} and Table.\ref{tab:U_relative_error}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{cccccc}
+\toprule
+a/b ratio & \(U_{x,\text{cal}}\) & \(U_{x,\text{FEM}}\) & \(U_{y,\text{cal}}\) & \(U_{y,\text{FEM}}\) \\
+\midrule
+1 & 0.01588 & 0.03816 & 0.0004068 & -0.02473  \\
+0.5 & 0.01688 & 0.0247 & -0.00484 & -0.01205 \\
+0.05 & 0.0176 & 0.01889 & -0.00536 & -0.00658\\
+\bottomrule
+\end{tabular}
+\caption{Computed displacement by simplified assumptions for different a/b ratios }
+\label{tab:U_eaxvsfem}
+\end{table}
+
+\begin{table}[h]
+\centering
+
+\begin{tabular}{ccc}
+\toprule
+a/b ratio & Error in \( U_{x} \) (\%) & Error in \( U_{y} \) (\%) \\
+\midrule
+1 & 58.39 & 101.64 \\
+0.5 & 31.66 & 59.83 \\
+0.05 & 6.83 & 18.54 \\
+\bottomrule
+\end{tabular}
+\caption{Relative Errors Between Calculated and FEM-obtained Displacements for Different a/b Ratios}
+\label{tab:U_relative_error}
+\end{table}
+  
+  
+  
+
+
+% Considering a plate subjected to plane stress conditions, we assume the following material properties and dimensions:
+% \begin{itemize}
+%     \item Young's Modulus, \( E = 200 \) GPa.
+%     \item Poisson's ratio, \( \nu = 0.3 \).
+%     \item Plate thickness, \( h = 1 \) mm.
+% \end{itemize}
+% Given the applied total force \( P = 2000 \) N and side length \( L = b = 40 \) mm, we aim to estimate the displacements.
+
+% The stress in the x-direction due to the applied force is:
+% \begin{equation}
+% \sigma_x = \frac{P}{h \times b}
+% \end{equation}
+
+% No force in the y-direction implies \( \sigma_y = 0 \).
+
+% The strains in the x and y directions, under plane stress conditions, are:
+% \begin{equation}
+% \begin{aligned}
+% \epsilon_x &= \frac{1}{E} (\sigma_x - \nu \sigma_y) \\
+% \epsilon_y &= \frac{1}{E} (\sigma_y - \nu \sigma_x)
+% \end{aligned}
+% \end{equation}
+
+% Using the strains, the displacements at the boundaries are estimated as:
+
+% \begin{equation}
+% \begin{aligned}
+% u_x(L, 0) &= \epsilon_x \times L \\
+% u_y(0, L) &= \epsilon_y \times L
+% \end{aligned}
+% \end{equation}
+
+% The estimated displacements at the boundaries are:
+% \begin{equation}
+% \begin{aligned}
+% u_x(L, 0) &\approx 0.01 \, \text{mm} \\
+% u_y(0, L) &\approx -0.003 \, \text{mm}
+% \end{aligned}
+% \end{equation}
+
+% The above displacements are approximations based on plane stress and linear elasticity assumptions.
 
 \subsection{Question 3}
+
+The computed strain energy values for different a/b ratios using different mesh types (T3 and Q4) are presented in Table.\ref{tab:strain_energy_values}.
+
+\begin{table}[h]
+\centering
+\caption{Computed strain energy values for different a/b ratios.}
+\label{tab:strain_energy_values}
+\begin{tabular}{cccc}
+\toprule
+a/b ratio & T3 & Q4 & Average \\
+\midrule
+1           & 25.898 & 22.337 & 24.1175 \\
+0.5         & 17.145 & 18.377 & 17.761 \\
+0.05        & 15.449 & 14.443 & 14.946 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Due to the limitations in calculating the exact strain energy, the computed values from the numerical simulations are considered as representative for each mesh type (T3 and Q4). The table shows that the strain energy values vary with the a/b ratio. Specifically, the energy values are highest for a ratio of 1 and decrease as the ratio decreases. This suggests that the structure is more energetically stable when a/b is closer to 1. 
+
+While we cannot compare these values to the exact strain energy due to computational constraints, the exact strain energy in the following questions is the energy calculated by a posterior error estimate.
 
 \subsection{Question 4}
 
@@ -481,7 +560,7 @@ The log-log plot for energy norm error versus mesh size and DOF are represented 
   \caption{Convergence Rates based on Mesh Size}
   \begin{tabular}{|c|c|c|}
   \hline
-  \(a/b\) Ratio & Element Type & Convergence Rate (Mesh Size) \\
+  \(a/b\) Ratio & Element Type & Convergence Rate \\
   \hline
   1 & T3 & 0.092621 \\
   1 & Q4 & 0.736803 \\
@@ -499,7 +578,7 @@ The log-log plot for energy norm error versus mesh size and DOF are represented 
     \caption{Convergence Rates based on DOFs}
     \begin{tabular}{|c|c|c|}
     \hline
-    \(a/b\) Ratio & Element Type & Convergence Rate (DOFs) \\
+    \(a/b\) Ratio & Element Type & Convergence Rate\\
     \hline
     1 & T3 & -0.054701 \\
     1 & Q4 & -0.486695 \\
@@ -530,9 +609,32 @@ The convergence rates for different elements with different a/b ratios concernin
     \item For Q4 elements with \(a/b\) ratios of 1, 0.5, and 0.05, the observed convergence rates are -0.486695, 0.091080, and -0.171758, respectively. 
 \end{itemize}
 
-It is observed that only for \(a/b = 1\) in T3 mesh and \(a/b = 0.5\) in Q4 mesh, the log-log plots appear to be linear. However, the convergence rates for all curves are lower than the expected theoretical values. The convergence rates of each mesh type in h-FEM in 2D are equal to the order of the interpolation polynomials over 2.  Therefore, the experimentally observed convergence rates do not align with the theoretical predictions. 
+It is observed that only for \(a/b = 1\) in T3 mesh and \(a/b = 0.5\) in Q4 mesh, the log-log plots appear to be linear. However, the convergence rates for all curves are lower than the expected theoretical values. The convergence rates of each mesh type in h-FEM in 2D are equal to the order of the interpolation polynomials over 2. Therefore, the experimentally observed convergence rates do not align with the theoretical predictions. However, from a trend perspective, it is observed that the error decreases as the mesh size gets smaller and also diminishes as the degrees of freedom (DOF) increase.
+
  
 \subsection{Question 5}
+Fig.\ref{fig:tri_1}, Fig.\ref{fig:quad_1}, Fig.\ref{fig:triangle_0.5}. Fig.\ref{fig:triangle_0.05} and Fig.\ref{fig:quad_0.05} represents the stress field of a/b ratie equal to {1, 0.5, 0.05}. For the Q4 element, the max stress value is selected by superconvergent patch recovery (SPR). The definition of the SPR method is in Appendix.\ref{Apdx:SPR}.
+
+
+The relative errors between the exact analytical solution and the FEM-obtained stress values are presented in Table~\ref{tab:stress_error}.
+
+\begin{table}[h]
+\centering
+\caption{Relative Errors Between Exact and FEM-obtained Stresses for Different a/b Ratios}
+\label{tab:stress_error}
+\begin{tabular}{cccc}
+\toprule
+a/b ratio & Error in \( \sigma_{x} \) (\%) & Error in \( \sigma_{y} \) (\%) \\
+\midrule
+1 & 57.33 & 805.00 \\
+0.5 & 40.39 & 1130.77 \\
+0.05 & 31.37 & 1820.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Based on the relative error data, it is evident that the stress values have a higher level of relative error compared to the displacements. The relative errors in stress range from 31.37\% to 1820.00\%, while for displacements, they range from 6.83\% to 101.64\%. Therefore, in this particular case, the displacements appear to be more accurately predicted than the stresses.
+
 \begin{figure}[!ht]
   \begin{subfigure}[c]{0.26\textwidth}
     \includegraphics[width=1.\linewidth]{Q2_5/Q5_1_x_triangle.png}
@@ -690,7 +792,8 @@ It is observed that only for \(a/b = 1\) in T3 mesh and \(a/b = 0.5\) in Q4 mesh
   \label{fig:quad_0.05}
 \end{figure}
 
-The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 and Q4 elements at different \(a/b\) ratios. It is evident that the experimentally observed SCFs are significantly different from the theoretical predictions.
+\subsection{Question 6}
+The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 and Q4 elements at different \(a/b\) ratios. It is evident that the experimentally observed SCFs are significantly different from the theoretical predictions (given by $K_c=1+2 \frac{b}{a}$).
 
 \begin{itemize}
     \item For an \(a/b\) ratio of 1, both T3 and Q4 elements show SCFs (7.3 and 6.4, respectively) that are much higher than the theoretical value of 3. The average SCF is 6.85, which is more than twice the theoretical prediction.
@@ -698,7 +801,6 @@ The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 a
     \item Interestingly, for an \(a/b\) ratio of 0.05, the SCFs are lower than the theoretical value. The SCFs for T3 and Q4 are 5.8 and 7, respectively, with an average of 6.4, which is far below the theoretical value of 41.
 \end{itemize}
 
-\subsection{Question 6}
 \begin{table}[h]
   \centering
   \caption{Stress Concentration Factors for T3 and Q4 Elements}
@@ -718,7 +820,7 @@ The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 a
 
 The allowable stress values for the material under non-failing conditions at different a/b ratios are presented in the following table:
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{cccc}
 \toprule
@@ -729,11 +831,43 @@ a/b  ratio & T3 & Q4 & Average \\
 0.05        & 31.4& 27.3 & 29.35 \\
 \bottomrule
 \end{tabular}
-\caption{Allowable stress values for different $\frac{a}{b}$  ratios.}
+\caption{Allowable stress values for different a/b ratios.}
 \end{table}
 
 
-The table shows that the material has relatively consistent allowable stress values across different a/b ratios. Specifically, the average allowable stress is approximately around 30, varying slightly from 27.65 to 31.95. This suggests that the material's allowable stress is not significantly influenced by the a/b ratio, indicating good material robustness under varying conditions.
+The table shows that the material has relatively consistent allowable stress values across different a/b ratios. Specifically, the average allowable stress is approximately 30, varying slightly from 27.65 to 31.95. This suggests that the material's allowable stress is not significantly influenced by the a/b ratio, indicating good material robustness under varying conditions.
+\subsection{Question 8}
+
+\subsection*{Strain Energy and Structural Integrity}
+
+The calculated strain energy values for the three different \( a/b \) ratios indicate varying levels of structural integrity. For \( a/b = 1 \), the strain energy was highest, which suggests that the structure is energetically less stable when the hole is a circle. This could be attributed to higher localized stresses around the hole, making the structure more susceptible to energy accumulation.
+
+For \( a/b = 0.5 \), the strain energy reduced compared to \( a/b = 1 \). This indicates that the structure becomes more stable as the hole becomes less elliptical. This could be due to a more uniform stress distribution around the hole, thus lowering the overall strain energy.
+
+Interestingly, the lowest strain energy was observed for \( a/b = 0.05 \). This can be attributed to the shape of the hole, which is a very narrow ellipse at this ratio. In essence, the structure behaves almost like a solid plate with a crack, rather than a plate with a hole. The narrowness of the ellipse minimizes the global deformation, making the structure resemble a nearly intact plate. As a result, the strain energy required for deformation is the least, highlighting a more stable structural configuration under these conditions.
+
+\subsection*{Convergence Rates}
+
+It was observed that the convergence rates deviated from the theoretical predictions, especially when \( a/b = 1 \). This could be attributed to the narrow ellipse at the center when \( a/b = 1 \), making the structure highly sensitive to mesh size. A fine mesh is needed for more accurate results, particularly in regions with strong gradients or stress concentrations.
+
+\subsection*{Stress and Displacement Errors}
+
+Both stress and displacement errors were considered. The stress errors were notably higher than those for displacements. For instance, stress errors ranged from 31.37\% to 1820.00\%, whereas displacement errors were between 6.83\% and 101.64\%. This suggests that the Finite Element model is more reliable for predicting displacements than for stresses.
+
+\subsection*{Stress Concentration Factors (SCF)}
+
+The SCFs deviated significantly from theoretical values, particularly at \( a/b = 1 \) and \( a/b = 0.5 \). This could be due to the coarse mesh used in the simulations. Also, the stress values at these concentrations were observed to increase as the mesh size decreased, possibly indicating the presence of a singularity. A singularity in this context means that the stress becomes infinite at a point, which is a known issue in the Finite Element Analysis of problems with sharp corners or re-entrant angles.
+
+\subsection*{Sensitivity to Mesh Size}
+
+The observed sensitivity to mesh size, especially at \( a/b = 1 \), indicates that the simulations are less reliable in capturing the true behavior of the structure at this particular geometry. The abrupt stress values at points of stress concentration further support this observation. Therefore, the mesh size and element type play a crucial role in the simulation's reliability.
+
+\subsection*{Validity of the Simulations}
+
+While the study provides valuable insights into the performance of T3 and Q4 elements under different conditions, the results should be interpreted cautiously due to the limitations mentioned, including mesh sensitivity and possible singularities.
+
+
+
 
 %------------------------------------------------
 
@@ -741,7 +875,7 @@ The table shows that the material has relatively consistent allowable stress val
 
 \section{Discussion}
 
-The discussion is a very important part of the report, so make sure you write it properly.\cite{Figueredo:2009dg} 
+The discussion is a very important part of the report, so make sure you write it properly.\cite{jin2014solution} 
 
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
@@ -749,11 +883,10 @@ The discussion is a very important part of the report, so make sure you write it
 
 \begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
 
-\bibitem[Figueredo and Wolf, 2009]{Figueredo:2009dg}
-Figueredo, A.~J. and Wolf, P. S.~A. (2009).
-\newblock Assortative pairing and life history strategy - a cross-cultural
-  study.
-\newblock {\em Human Nature}, 20:317--330.
+\bibitem[Jin et al., 2014]{jin2014solution}
+Jin, Xiaoqing and Wang, Zhanjiang and Zhou, Qinghua and Keer, Leon M and Wang, Qian (2014).
+\newblock On the solution of an elliptical inhomogeneity in plane elasticity by the equivalent inclusion method.
+\newblock {\em Journal of Elasticity}, 114:1--18.
  
 \end{thebibliography}
 
@@ -762,14 +895,13 @@ Figueredo, A.~J. and Wolf, P. S.~A. (2009).
 
 \Large{Remember there is a 10-page limit!}
 \hrule 
-%%\newpage
+\newpage
 %%\bibliographystyle{apacite}
 %%\bibliography{sample}
 \bibliographystyle{abbrv}
 
 \bibliography{ref.bib} % the name of your .bib file without the extension
 % Start the appendix
-\newpage
 \appendix
 \section{Finite elements methods in 1-D main codes}
 \label{Apdx:FEM_1D}
@@ -1398,6 +1530,29 @@ def cal_energy(elements_list, GPN = 2):
 \end{lstlisting}
 
 
+\section{Implementation of Superconvergent Patch Recovery}
+\label{Apdx:SPR}
+The Superconvergent Patch Recovery (SPR) method refines the stress distribution by extrapolating and averaging the stresses. The key steps can be mathematically represented as follows:
+
+\begin{enumerate}
+    \item \textbf{Stress at Gauss Points}: The stress \( \sigma_{\text{Gauss}} \) is initially calculated at the Gauss points of each finite element.
+    \[
+    \sigma_{\text{Gauss}} = C : \varepsilon_{\text{Gauss}}
+    \]
+    where \( C \) is the material stiffness matrix, and \( \varepsilon_{\text{Gauss}} \) is the strain at the Gauss points.
+
+    \item \textbf{Extrapolation to Nodes}: The stress is then extrapolated to the nodes \( N \) of each element using shape functions \( N_i \).
+    \[
+    \sigma_{\text{Node}} = \sum_{i=1}^{n} N_i \sigma_{\text{Gauss}, i}
+    \]
+    where \( n \) is the number of Gauss points.
+
+    \item \textbf{Averaging at Nodes}: Finally, the nodal stresses are averaged across adjacent elements to get a smoother stress distribution \( \sigma_{\text{avg}} \).
+    \[
+    \sigma_{\text{avg}} = \frac{1}{m} \sum_{j=1}^{m} \sigma_{\text{Node}, j}
+    \]
+    where \( m \) is the number of nodes shared by adjacent elements.
+\end{enumerate}
 
 
 

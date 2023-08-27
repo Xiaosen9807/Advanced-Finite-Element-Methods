@@ -20,7 +20,7 @@ script_dir = os.path.dirname(os.path.abspath(script_path))
 os.chdir(script_dir)
 
 def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
-    Load_x = 28.9  # N/mm
+    Load_x = 50  # N/mm
     Load_y = 0  # N/mm
     A = 40  # mm^2
     nodes_coord,  element_nodes = create_mesh(a_b, mesh_shape, mesh_size)
@@ -199,7 +199,7 @@ if __name__=='__main__':
         mesh_shape_lst = [0, 1]
 
     else:
-        a_b_lst = [0.5]
+        a_b_lst = [0.05]
         mesh_size_lst = [2]
         mesh_shape_lst = [1]
 
@@ -224,8 +224,8 @@ if __name__=='__main__':
     #     with open("Data/data.pkl", "wb") as f:
     #         pickle.dump(data_dict, f)
     # Determine global min and max values
-    dir = 'von'
-    type = 'stress'
+    dir = 'y'
+    type = 'disp'
     data_ori = data_dict
     
     for i in range(len(data_ori)):
@@ -234,5 +234,8 @@ if __name__=='__main__':
         mesh_size = data_ori[i]['mesh_size']
         mesh_shape = data_ori[i]['mesh_shape']
         draw(elements_list, dir, type, show = show, save=save)
-        # draw(elements_list, 'y', type, show = show, save=save)
-        # draw_exact(elements_list, dir, type, show=show)
+        draw(elements_list, dir, 'stress', show = show, save=save)
+        draw_exact(elements_list, dir, 'strain', show=show)
+        draw_exact(elements_list, dir, 'stress', show=show)
+        # draw_exact(elements_list, 'y', 'stress', show=show)
+        # draw_exact(elements_list, 'xy', 'stress', show=show)

@@ -72,7 +72,7 @@ def cal_energy_exact(elements_list,a_b, GPN = 2):
             W = Ws[g]
             dN = elem.gradshape(xy[0], xy[0])
             # J = jacobian(elem.vertices, dN)
-            J = np.dot(dN, elem.vertices).T
+            J = np.dot(dN, elem.vertices)
             J_inv = np.linalg.inv(J)
             J_det = np.linalg.det(J)
             
@@ -204,18 +204,23 @@ if __name__=='__main__':
         U_T = []
         U_Q = []
         U_2 = []
+        U_T_p = []
+        U_Q_p = []
         DOF_Q = []
         DOF_T = []
         DOF_2 = []
+        DOF_paper = []
         mesh_size_T = []
         mesh_size_Q = []
         for data in data_U[key]:
             if data['mesh_shape'] == 'T3':
                 U_T.append(data['E_FEM'])
+                U_T_p.append(data['E_exa'])
                 DOF_T.append(data['DOF'])
                 mesh_size_T.append(data['mesh_size'])
             elif data['mesh_shape'] == 'Q4':
                 U_Q.append(data['E_FEM'])
+                U_Q_p.append(data['E_exa'])
                 DOF_Q.append(data['DOF'])
                 mesh_size_Q.append(data['mesh_size'])
             else:
@@ -227,13 +232,17 @@ if __name__=='__main__':
         # print('U_2', U_2)
         U_T_FEM = posterior_energy(U_T, DOF_T, 1)
         U_Q_FEM = posterior_energy(U_Q, DOF_Q, 2)
+        U_T_paper = posterior_energy(U_T_p, DOF_T, 1)
+        U_Q_paper = posterior_energy(U_Q_p, DOF_Q, 2)
         U_2_exa = posterior_energy(U_2, DOF_2, 1)
-        U_post[key] = {'T3':{'U':U_T_FEM, 'U_exa':U_2_exa, 'U_list':U_T, 'DOF':DOF_T,'mesh_size':mesh_size_T}, 'Q4':{'U':U_Q_FEM,'U_exa':U_2_exa,  'U_list':U_Q, 'DOF':DOF_Q,'mesh_size':mesh_size_Q}}
+        U_post[key] = {'T3':{'U':U_T_FEM, 'U_exa':U_2_exa, 'U_list':U_T, 'U_paper':U_T_p, 'DOF':DOF_T,'mesh_size':mesh_size_T}, 'Q4':{'U':U_Q_FEM,'U_exa':U_2_exa,  'U_list':U_Q,'U_paper':U_Q_p, 'DOF':DOF_Q,'mesh_size':mesh_size_Q}}
         # U_2_exa = np.mean(U_2)
 
         print("The strain energy in FEM for a/b={} within T3 is {}".format(data_U[key][0]['a_b'], U_T_FEM))
+        print("The strain energy in exact solution for a/b={} within T3 is {}".format(data_U[key][0]['a_b'], U_T_paper))
         print("The DOF or a/b={} within T3 is {}".format(data_U[key][0]['a_b'], DOF_T))
         print("The strain energy in FEM for a/b={} within Q4 is {}".format(data_U[key][0]['a_b'], U_Q_FEM))
+        print("The strain energy in exact solution for a/b={} within Q4 is {}".format(data_U[key][0]['a_b'], U_Q_paper))
         print("The DOF or a/b={} within Q4 is {}".format(data_U[key][0]['a_b'], DOF_Q))
         print("\nThe energy or a/b={} within total is {}".format(data_U[key][0]['a_b'], U_2_exa))
         # print("The strain energy in exact for a/b={} is {}".format(data_U[key][0]['a_b'], U_2_exa))

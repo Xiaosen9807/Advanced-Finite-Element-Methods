@@ -194,9 +194,9 @@ if __name__=="__main__":
     #    eta = 0.2
     
     # ??expression???????
-    output = t3_phi(xi, eta)
-    print('output', output)
-    plt.imshow(output, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
+    output_1 = t3_phi(xi, eta)
+    print('output', output_1)
+    plt.imshow(output_1, origin='lower', extent=[x0, x1, y0, y1], cmap='jet')
     plt.colorbar()
     plt.title('Shape Function')
     plt.xlabel('x')
