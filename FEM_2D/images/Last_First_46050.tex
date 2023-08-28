@@ -59,7 +59,7 @@
 \pagestyle{fancy} % All pages have headers and footers
 \fancyhead{} % Blank out the default header
 \fancyfoot{} % Blank out the default footer
-\fancyhead[C]{Final Project for Advanced FEM (ME46050) $\bullet$ Sep 2023 $\bullet$ Vol. XXI, No. 1} % Custom header text
+\fancyhead[C]{Final Project for Advanced FEM (ME46050) $\bullet$ Aug 2023 $\bullet$ Vol. XXI, No. 1} % Custom header text
 \fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 \usepackage{titling} % Customizing the title section
@@ -140,13 +140,13 @@ edition: 2022-2023
 
 \section{Introduction}
 
-\lettrine[nindent=0em,lines=3]{T}his report addresses two advanced finite element problems. The first problem constructs a solver for a one-dimensional Poisson equation using both h-version and p-version finite elements. The second problem develops a solver for a two-dimensional stress distribution of elliptical inhomogeneity in plane elasticity, employing the h-version FEM with T3 element and Q4 elements.
+\lettrine[nindent=0em,lines=3]{T}his report addresses two advanced finite element problems. The first problem constructs a solver for a one-dimensional Poisson equation using both h-version and p-version finite elements. The second problem develops a solver for a two-dimensional stress distribution of elliptical inhomogeneity in plane elasticity, employing the h-version FEM with T3 elements and Q4 elements.
 
 
 \section{\textbf{PROBLEM 1}}
 \subsection{Question 1}
-
-The code for finite element method, shape functions as well as the gaussian integration method in Appendix.\ref{Apdx:FEM_1D}, \ref{Apdx:shape_1D}, and \ref{Apdx:Gaussian-1D}.
+The definition of the 1-D Poisson equation is in the Appendix.\ref{Apdx:Q1}
+The code for finite element method, shape functions as well as the Gaussian integration method in Appendix.\ref{Apdx:FEM_1D}, \ref{Apdx:shape_1D}, and \ref{Apdx:Gaussian-1D}.
 
 \begin{figure}[htbp]
   \centering
@@ -167,7 +167,7 @@ The code for finite element method, shape functions as well as the gaussian inte
 
 The precise strain energy for this problem is given as U=0.03559183822564316. To determine the rates of convergence in the energy norm for both element types, we focus on terminal convergence by considering the last two points in the convergence plots.
 
-The formula for the convergence rate can be found in Eq.\ref{eq:rate}, which can also be defined as the slope of the log-log plot. For both elements, the error decreases with the increase of the DOFs and the decrease of the mesh size. It's noteworthy that the convergence rate for the quadratic elements is approximately greater than that for the linear elements. Given the smoothness of the solution, the theoretical rates of convergence are typically 2 for linear elements and 4 for quadratic elements. For the computed errors, the linear elements exhibit an error of approximately \(0.031\), while the quadratic elements have a significantly smaller error of about \(6.0 \times 10^{-5}\). These computed rates align closely with the theoretical expectations.
+The formula for the convergence rate can be found in Eq.\ref{eq:rate}, which can also be defined as the slope of the log-log plot. The mesh size \( h \) is defined as \( h = \frac{1}{{\text{DOF}}^d} \), where \( d \) is the dimensionality of the problem. In this case, we take \( d = 1 \). For both elements, the error decreases with the increase of the DOFs and the decrease of the mesh size. It's noteworthy that the convergence rate for the quadratic elements is approximately greater than that for the linear elements. Given the smoothness of the solution, the theoretical rates of convergence are typically -1.045 for linear elements and -2.076 for quadratic elements concerned with DOFs, which is equal to the order of the polynomials. For the computed errors, the linear elements exhibit an error of approximately \(0.031\), while the quadratic elements have a significantly smaller error of about \(6.0 \times 10^{-5}\). These computed rates align closely with the theoretical expectations.
 
 \begin{equation}
 \text{Rate} = \frac{\log(\text{error}_2) - \log(\text{error}_1)}{\log(\text{DOF}_2) - \log(\text{DOF}_1)}
@@ -175,9 +175,8 @@ The formula for the convergence rate can be found in Eq.\ref{eq:rate}, which can
 \end{equation}
 
 \subsection{Question 2}
-In the log-log plot in Fig.\ref{fig:h_p_error} of the relative error in the energy norm versus the number of DOFs, the slopes of the plotted lines represent these rates. 
+In the log-log plot in Fig.\ref{fig:h_p_error} of the relative error in the energy norm versus the number of DOFs, the slopes of the plotted lines represent these rates. The following items are observed.
 
-Given the computed convergence rates for the different finite element methods, we observe the following rates:
 \begin{itemize}
     \item For Linear h-FEM: The rate of convergence is approximately -1.045.
     \item For Quadratic h-FEM: The rate of convergence is approximately -2.076.
@@ -194,7 +193,7 @@ The negative values for the convergence rates indicate that the error decreases 
 
 \subsection{Question 3}
 
-In order to estimate the error in our finite element method solutions, we use a posteriori error analysis based on the energy norms described in the following processes.
+In order to estimate the error in finite element method solutions, we use a posteriori error analysis based on the energy norms described in the following processes.
 
 Considering the algebraic convergence of the energy norm error for exact solution $u$ and the finite elements solution $u_h$ in energy space $\epsilon(\Omega)$:
 
@@ -207,7 +206,7 @@ We went:
 \begin{equation}
  \|u\|_{\epsilon(\Omega)} = \sqrt{U}
 \end{equation}
-where $U$ is the exact energy.
+where $U$ is the exact strain energy.
 
 Considering the relation between the energy and binary term in the finite element methods.
 
@@ -281,7 +280,7 @@ The term \( \textbf{Q} \) gives a weighted comparison of the errors between diff
 
 By repeatedly applying the aforementioned process for multiple mesh sizes and averaging the computed energies, a more accurate representation of the solution's energy is achieved, which provides a reliable posterior error estimate.
 
-\begin{table}[h]
+\begin{table}[!ht]
   \centering
   \begin{tabular}{|l|c|c|}
       \hline
@@ -297,18 +296,15 @@ By repeatedly applying the aforementioned process for multiple mesh sizes and av
   \caption{Energy obtained by a posterior estimate and Relative Error values for different FEM methods}
   \label{tab:fem_values}
 \end{table}
-Certainly, based on the table provided, here's a suitable answer:
 
-The table.\ref{tab:fem_values} presents the energy values obtained using different Finite Element Methods (FEM) and their respective relative errors when compared to the exact solution. 
-
-For the linear FEM, the energy is computed to be \(0.03463\), which results in a relative error of \(2.7117\%\). This indicates a slight deviation from the exact solution. On the other hand, the quadratic FEM provides an energy value of \(0.03559\), which is extremely close to the exact solution with a minuscule relative error of \(0.000314\%\). This suggests that the quadratic FEM is significantly more accurate than the linear FEM for this problem. 
+ As shown in the table.\ref{tab:fem_values}, for the linear FEM, the energy is computed to be \(0.03463\), which results in a relative error of \(2.7117\%\). This indicates a slight deviation from the exact solution. On the other hand, the quadratic FEM provides an energy value of \(0.03559\), which is extremely close to the exact solution with a minuscule relative error of \(0.000314\%\). This suggests that the quadratic FEM is significantly more accurate than the linear FEM for this problem. 
 
 In summary, while the linear FEM offers a reasonable approximation, the quadratic FEM provides an almost exact match to the true solution in terms of energy.
 
 The code for a posterior estimate is provided in the Appendix.\ref{Apdx:post}.
 
 \subsection{Question 4}
-In the h-version study using the quadratic finite element method, we analyzed the model with varying mesh sizes, namely 5, 10, 20, and 40 evenly spaced elements. Fig.\ref{fig:q_4} represents the h-FEM solutions with four mesh sizes. A comparison of the numerical solutions against the exact solution provided insights into the accuracy of the employed method. From Fig.\ref{fig:h_error_4} it was discernible that the graph wasn't strictly linear. However, by focusing on the terminal two data points, we derived an asymptotic rate of convergence of \(-2.122\). This suggests a quadratic rate of reduction in error relative to the refinement in element size. For this specific problem, the exact strain energy is given by \( U = 1.585854059271320 \), and our computed results closely mirrored this value.  
+In the h-version study using the quadratic finite element method, we analyzed the model with varying mesh sizes, namely 5, 10, 20, and 40 evenly spaced elements. Fig.\ref{fig:q_4} represents the h-FEM solutions with four mesh sizes. A comparison of the numerical solutions against the exact solution provided insights into the accuracy of the employed method. From Fig.\ref{fig:h_error_4} it was discernible that the graph wasn't strictly linear. However, by focusing on the terminal two data points, we derived an asymptotic rate of convergence of \(-2.122\). This suggests a quadratic rate of reduction in error relative to the refinement in element size. For this specific problem, the exact strain energy is given by \( U = 1.585854059271320 \), and the computed results $U_{FEM} = 1.5845186616720888$ is close to this value.  
 
 \begin{figure}[!ht]
   \centering
@@ -389,13 +385,19 @@ From the results obtained, several conclusions can be drawn regarding the behavi
 \end{itemize}
 
 \subsubsection{Quadrature Points and Computation Efficiency}
-In p-FEM, higher-order shape functions demand precise integral evaluations, achieved effectively with Gauss quadrature. Given the complexity of these functions, 9 Gauss points were selected to ensure accurate integration of non-linear shape functions. While more Gauss points increase precision, they also require more computational effort. Nonetheless, for our specific setup, the added computational time was minimal, making the choice justifiable for enhanced accuracy without sacrificing efficiency.
+In p-FEM, higher-order shape functions demand precise integral evaluations, achieved effectively with Gauss quadrature. Given the complexity of these functions, 9 Gauss points were selected to ensure accurate integration of non-linear shape functions. While more Gauss points increase precision, they also require more computational effort. As is shown in Fig.\ref{fig:h_p_error_5_6}, when setting the Gaussian point as 6, the result of p-FEM cannot represent the convergence well in a strong gradient problem.
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.\linewidth]{Q1/h_p_error_5_3.png}
+  \caption{Log-log plot for DOF versus energy norm error in p-FEM and h-FEM when Gaussian points are selected as 6.}
+  \label{fig:h_p_error_5_6}
+\end{figure}
 
 \section{\textbf{PROBLEM 2}}
 \subsection{Questions 1}
-For the mesh size $h/L=0.05$ and Q4 mesh, the displacement fields for different a/b are represented in Fig.\ref{fig:disp}
-
-The code for finite element method, shape functions as well as the Gaussian integration method in Appendix.\ref{Apdx:FEM_2D}, \ref{Apdx:shape_2D}, and \ref{Apdx:Gaussian_2D}.
+The definition of the traction-free hole in an infinite plate with different a/b ratios is shown in Appendix.\ref{Apdx:Q2} of the report.
+ The code for finite element method, shape functions as well as the Gaussian integration method in Appendix.\ref{Apdx:FEM_2D}, \ref{Apdx:shape_2D}, and \ref{Apdx:Gaussian_2D}. For the mesh size $h/L=0.05$ and Q4 mesh, the displacement fields for different a/b are represented in Fig.\ref{fig:disp}.
 
 \begin{figure}[!ht]
   \centering
@@ -435,14 +437,14 @@ C = \frac{E}{1 - \nu^2} \begin{pmatrix}
 \end{pmatrix}
 \end{equation}
 
-to obtain the strain at each point. Due to the presence of an ellipse in the middle of the plate, the displacements are simplified as follows:
+to obtain the strain at each point. Due to the presence of an ellipse in the middle of the plate, the value of the strain at the edge point cannot represent the total strain of the part. Hence, the total strain at the edge points is simplified as the exact strain of the edge point plus the strain at the ellipse vertices:
 \[
-\epsilon_x(L,0) = \epsilon_x(L,0) + \epsilon_x(L,L),
+\epsilon_x(L,0) = \epsilon_x(L,0) + \epsilon_x(a,L),
 \]
 \[
-\epsilon_y(L,0) = \epsilon_y(L,0) + \epsilon_y(L,L).
+\epsilon_y(L,0) = \epsilon_y(L,0) + \epsilon_y(L,b).
 \]
-The displacements are then approximated as \(\text{displacement} = \text{strain} \times 40\).
+The displacements are then approximated as \(\text{displacement} = \text{strain} \times 40mm\).
 
 The results and relative error are tabulated in Table.\ref{tab:U_eaxvsfem} and Table.\ref{tab:U_relative_error}.
 
@@ -461,7 +463,7 @@ a/b ratio & \(U_{x,\text{cal}}\) & \(U_{x,\text{FEM}}\) & \(U_{y,\text{cal}}\) &
 \label{tab:U_eaxvsfem}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[!ht]
 \centering
 
 \begin{tabular}{ccc}
@@ -476,9 +478,8 @@ a/b ratio & Error in \( U_{x} \) (\%) & Error in \( U_{y} \) (\%) \\
 \caption{Relative Errors Between Calculated and FEM-obtained Displacements for Different a/b Ratios}
 \label{tab:U_relative_error}
 \end{table}
-  
-  
-  
+
+Table \ref{tab:U_relative_error} shows that the relative errors in displacements \( U_{x} \) and \( U_{y} \) decrease as the \( a/b \) ratio diminishes. The highest errors occur at \( a/b = 1 \), reaching up to 101.64\% for \( U_{y} \), suggesting the model's reduced reliability for circular holes. In contrast, the model appears more accurate for narrower ellipses, with errors below 20\% at \( a/b = 0.05 \).
 
 
 % Considering a plate subjected to plane stress conditions, we assume the following material properties and dimensions:
@@ -525,11 +526,11 @@ a/b ratio & Error in \( U_{x} \) (\%) & Error in \( U_{y} \) (\%) \\
 
 \subsection{Question 3}
 
-The computed strain energy values for different a/b ratios using different mesh types (T3 and Q4) are presented in Table.\ref{tab:strain_energy_values}.
+The computed strain energy values for different a/b ratios using different mesh types (T3 and Q4) are presented in Table.\ref{tab:strain_energy_values}. Due to the limitations in calculating the exact strain energy, the computed values from the numerical simulations are considered representative for each mesh type (T3 and Q4). The table shows that the strain energy values vary with the a/b ratio. Specifically, the energy values are highest for a ratio of 1 and decrease as the ratio decreases. This suggests that the structure is more energetically stable when a/b is closer to 1. 
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Computed strain energy values for different a/b ratios.}
+\caption{Computed strain energy values for different a/b ratios (unit kJ).}
 \label{tab:strain_energy_values}
 \begin{tabular}{cccc}
 \toprule
@@ -542,7 +543,6 @@ a/b ratio & T3 & Q4 & Average \\
 \end{tabular}
 \end{table}
 
-Due to the limitations in calculating the exact strain energy, the computed values from the numerical simulations are considered as representative for each mesh type (T3 and Q4). The table shows that the strain energy values vary with the a/b ratio. Specifically, the energy values are highest for a ratio of 1 and decrease as the ratio decreases. This suggests that the structure is more energetically stable when a/b is closer to 1. 
 
 While we cannot compare these values to the exact strain energy due to computational constraints, the exact strain energy in the following questions is the energy calculated by a posterior error estimate.
 
@@ -555,7 +555,7 @@ The log-log plot for energy norm error versus mesh size and DOF are represented 
   \caption{Log-log plot of energy norm error versus DOFs.}
   \label{fig:logDOF_Q2_4}
 \end{figure}
-\begin{table}[h]
+\begin{table}[ht]
   \centering
   \caption{Convergence Rates based on Mesh Size}
   \begin{tabular}{|c|c|c|}
@@ -573,7 +573,7 @@ The log-log plot for energy norm error versus mesh size and DOF are represented 
   \label{tab:convergenceRate_Meshsize}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[!ht]
     \centering
     \caption{Convergence Rates based on DOFs}
     \begin{tabular}{|c|c|c|}
@@ -591,7 +591,7 @@ The log-log plot for energy norm error versus mesh size and DOF are represented 
   \label{tab:convergenceRate_DOF}
 \end{table}
 
-Based on the provided data, the convergence rates in the energy norm were computed and compared to the theoretical values. Considering the fluctuation of the error is sensitive to the mesh size (the error reaches the lowest when the mesh size is 4), the convergence rates are calculated by the first point and the last point of the energy list.
+Considering the fluctuation of the error is sensitive to the mesh size (the error reaches the lowest when the mesh size is 4), the convergence rates are calculated by the first point and the last point of the energy list.
 
 The convergence rates for different elements with different a/b ratios concerning the mesh size and DOF are represented in Table.\ref{tab:convergenceRate_Meshsize} and Table.\ref{tab:convergenceRate_DOF}
 
@@ -613,12 +613,9 @@ It is observed that only for \(a/b = 1\) in T3 mesh and \(a/b = 0.5\) in Q4 mesh
 
  
 \subsection{Question 5}
-Fig.\ref{fig:tri_1}, Fig.\ref{fig:quad_1}, Fig.\ref{fig:triangle_0.5}. Fig.\ref{fig:triangle_0.05} and Fig.\ref{fig:quad_0.05} represents the stress field of a/b ratie equal to {1, 0.5, 0.05}. For the Q4 element, the max stress value is selected by superconvergent patch recovery (SPR). The definition of the SPR method is in Appendix.\ref{Apdx:SPR}.
+Fig.\ref{fig:tri_1}, Fig.\ref{fig:quad_1}, Fig.\ref{fig:triangle_0.5}. Fig.\ref{fig:triangle_0.05} and Fig.\ref{fig:quad_0.05} represents the stress field of a/b ratie equal to {1, 0.5, 0.05}. For the Q4 element, the max stress value is selected by superconvergent patch recovery (SPR). The definition of the SPR method is in Appendix.\ref{Apdx:SPR}. The relative errors between the exact analytical solution and the FEM-obtained stress values are presented in Table~\ref{tab:stress_error}.
 
-
-The relative errors between the exact analytical solution and the FEM-obtained stress values are presented in Table~\ref{tab:stress_error}.
-
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Relative Errors Between Exact and FEM-obtained Stresses for Different a/b Ratios}
 \label{tab:stress_error}
@@ -736,7 +733,7 @@ Based on the relative error data, it is evident that the stress values have a hi
     \caption{$\sigma_{von \, mise}$}
     \label{fig:von_quad_0.5}
   \end{subfigure}
-  \caption{Stress fields for a/b=0.05 with Q4 mesh.}
+  \caption{Stress fields for a/b=0.5 with Q4 mesh.}
   \label{fig:quad_0.5}
 \end{figure}
 
@@ -762,7 +759,7 @@ Based on the relative error data, it is evident that the stress values have a hi
     \caption{$\sigma_{von \, mise}$}
     \label{fig:von_triangle_0.05}
   \end{subfigure}
-  \caption{Stress fields for a/b=0.5 with T3 mesh.}
+  \caption{Stress fields for a/b=0.05 with T3 mesh.}
   \label{fig:triangle_0.05}
 \end{figure}
 
@@ -801,7 +798,7 @@ The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 a
     \item Interestingly, for an \(a/b\) ratio of 0.05, the SCFs are lower than the theoretical value. The SCFs for T3 and Q4 are 5.8 and 7, respectively, with an average of 6.4, which is far below the theoretical value of 41.
 \end{itemize}
 
-\begin{table}[h]
+\begin{table}[!ht]
   \centering
   \caption{Stress Concentration Factors for T3 and Q4 Elements}
   \begin{tabular}{|c|c|c|c|c|}
@@ -818,9 +815,9 @@ The Table.\ref{tab:SCF} presents the stress concentration factors (SCF) for T3 a
 
 \subsection{Question 7}
 
-The allowable stress values for the material under non-failing conditions at different a/b ratios are presented in the following table:
+The allowable stress values for the material under non-failing conditions at different a/b ratios are presented in the following Table.\ref{tab:criterion}. Von Mises criterion is selected as the criterion for the maximum allowable stress (shown in Appendix.\ref{Apdx:Von}).
 
-\begin{table}[H]
+\begin{table}[!ht]
 \centering
 \begin{tabular}{cccc}
 \toprule
@@ -832,6 +829,7 @@ a/b  ratio & T3 & Q4 & Average \\
 \bottomrule
 \end{tabular}
 \caption{Allowable stress values for different a/b ratios.}
+\label{tab:criterion}
 \end{table}
 
 
@@ -844,7 +842,7 @@ The calculated strain energy values for the three different \( a/b \) ratios ind
 
 For \( a/b = 0.5 \), the strain energy reduced compared to \( a/b = 1 \). This indicates that the structure becomes more stable as the hole becomes less elliptical. This could be due to a more uniform stress distribution around the hole, thus lowering the overall strain energy.
 
-Interestingly, the lowest strain energy was observed for \( a/b = 0.05 \). This can be attributed to the shape of the hole, which is a very narrow ellipse at this ratio. In essence, the structure behaves almost like a solid plate with a crack, rather than a plate with a hole. The narrowness of the ellipse minimizes the global deformation, making the structure resemble a nearly intact plate. As a result, the strain energy required for deformation is the least, highlighting a more stable structural configuration under these conditions.
+Interestingly, the lowest strain energy was observed for \( a/b = 0.05 \). This can be attributed to the shape of the hole, which is a very narrow ellipse at this ratio. In essence, the structure behaves almost like a solid plate with a crack, rather than a plate with a hole. The narrowness of the ellipse minimizes the global deformation, making the structure resemble a nearly intact plate.
 
 \subsection*{Convergence Rates}
 
@@ -858,24 +856,19 @@ Both stress and displacement errors were considered. The stress errors were nota
 
 The SCFs deviated significantly from theoretical values, particularly at \( a/b = 1 \) and \( a/b = 0.5 \). This could be due to the coarse mesh used in the simulations. Also, the stress values at these concentrations were observed to increase as the mesh size decreased, possibly indicating the presence of a singularity. A singularity in this context means that the stress becomes infinite at a point, which is a known issue in the Finite Element Analysis of problems with sharp corners or re-entrant angles.
 
-\subsection*{Sensitivity to Mesh Size}
+\subsection*{Mesh Sensitivity }
 
 The observed sensitivity to mesh size, especially at \( a/b = 1 \), indicates that the simulations are less reliable in capturing the true behavior of the structure at this particular geometry. The abrupt stress values at points of stress concentration further support this observation. Therefore, the mesh size and element type play a crucial role in the simulation's reliability.
 
 \subsection*{Validity of the Simulations}
 
-While the study provides valuable insights into the performance of T3 and Q4 elements under different conditions, the results should be interpreted cautiously due to the limitations mentioned, including mesh sensitivity and possible singularities.
-
+While the study offers valuable insights into the performance of T3 and Q4 elements under various conditions, the findings should be interpreted with caution due to several limitations, such as mesh sensitivity and the potential for singularities. Furthermore, the observed convergence rate of the energy norm error deviates from the theoretical rate, particularly when the ratio a/b=0.3. For T3 elements in this case, the convergence rate exhibits a counterintuitive trend compared to other results. As such, a more refined definition of the mesh is warranted.
 
 
 
 %------------------------------------------------
 
 %------------------------------------------------
-
-\section{Discussion}
-
-The discussion is a very important part of the report, so make sure you write it properly.\cite{jin2014solution} 
 
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
@@ -892,17 +885,29 @@ Jin, Xiaoqing and Wang, Zhanjiang and Zhou, Qinghua and Keer, Leon M and Wang, Q
 
 %----------------------------------------------------------------------------------------
 
-
-\Large{Remember there is a 10-page limit!}
 \hrule 
 \newpage
 %%\bibliographystyle{apacite}
 %%\bibliography{sample}
-\bibliographystyle{abbrv}
+%%\bibliographystyle{abbrv}
 
-\bibliography{ref.bib} % the name of your .bib file without the extension
+%%\bibliography{ref.bib} % the name of your .bib file without the extension
 % Start the appendix
 \appendix
+\section{Defeinition of the 1-D Possion equation}
+\label{Apdx:Q1}
+The 1-D Poisson equation is given as:
+\begin{equation}
+-\frac{\mathrm{d}^2 u}{\mathrm{~d} x^2}=\frac{2\left(a+a^3 b(b-x+1)\right)}{\left(a^2 b^2+1\right)^2}
+\end{equation}
+
+with boundary conditions $(\mathrm{BCs}) u(0)=u(1)=0$, where $a$ is constant and $b=x-x_b$. The solution to this boundary value problem (BVP) is given by
+\begin{equation}
+u(x)=(1-x)\left(\arctan (a b)+\arctan \left(a x_b\right)\right)
+\end{equation}
+
+
+
 \section{Finite elements methods in 1-D main codes}
 \label{Apdx:FEM_1D}
 \begin{lstlisting}[language=Python, caption=Finite elements methods in 1-D main code]
@@ -1231,6 +1236,14 @@ def posterior_energy(energy_list_array, DOFs_array):
 return np.mean(U_list)
 \end{lstlisting}
   
+\section{The definition of the traction-free hole in an infinite plate with different a/b ratios}
+\label{Apdx:Q2}
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.\linewidth]{Q2_1/Q2.jpg}
+  \caption{The definition of the traction-free hole in an infinite plate with different a/b ratios.}
+  \label{fig:Q2}
+\end{figure}
 
 \section{Finite elements methods in 2D}
 \label{Apdx:FEM_2D}
@@ -1238,7 +1251,6 @@ return np.mean(U_list)
   def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
   Load_x = 50  # N/mm
   Load_y = 0  # N/mm
-  A = 40  # mm^2
   nodes_coord,  element_nodes = create_mesh(a_b, mesh_shape, mesh_size)
   nodes_list = Boundary(nodes_coord, a_b)
   element_list = []
@@ -1488,6 +1500,20 @@ class Q4_phipy(shape_fns):
 
 \section{Von Mise stress}
 \label{Apdx:Von}
+
+The von Mises criterion, also known as the von Mises yield criterion or von Mises flow criterion, is a widely-used model for predicting the yielding behavior of ductile materials. Mathematically, it can be expressed as:
+\subsection*{Von Mises Criterion According to the Implemented Code}
+
+The von Mises stress criterion, as implemented in the provided Python code, is computed using the formula:
+
+\[
+\sigma_{\text{vM}} = \sqrt{\sigma_x^2 - \sigma_x \sigma_y + \sigma_y^2 + 3\tau_{xy}^2}
+\]
+
+Here, \( \sigma_x \) and \( \sigma_y \) are the normal stresses in the \( x \) and \( y \) directions, respectively, and \( \tau_{xy} \) is the shear stress in the \( xy \) plane.
+
+The code for Von Mise stress is as follows:
+
 \begin{lstlisting}[language=Python, caption=Von Mise stress]
   def Von_Mise(sigma_x, sigma_y, tau_xy):
         result = np.sqrt(sigma_x**2-sigma_x*sigma_y+sigma_y**2+3*tau_xy**2)
