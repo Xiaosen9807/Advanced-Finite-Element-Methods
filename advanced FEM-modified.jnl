@@ -1,0 +1,1730 @@
+# -*- coding: mbcs -*-
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(0.0, 0.0), 
+    point2=(4.0, -4.0))
+mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Part-1', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['Part-1'].BaseShell(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(gridSpacing=0.28, name='__profile__', 
+    sheetSize=11.31)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__profile__'])
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, -4.0), point2=(
+    -2.0, 0.0))
+mdb.models['Model-1'].sketches['__profile__'].undo()
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, -4.0), point2=(
+    0.0, -2.0))
+mdb.models['Model-1'].sketches['__profile__'].VerticalConstraint(addUndoState=
+    False, entity=mdb.models['Model-1'].sketches['__profile__'].geometry[6])
+mdb.models['Model-1'].sketches['__profile__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['Model-1'].sketches['__profile__'].geometry[3], 
+    entity2=mdb.models['Model-1'].sketches['__profile__'].geometry[6])
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, -4.0), point2=(
+    1.0, 0.0))
+mdb.models['Model-1'].sketches['__profile__'].undo()
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, -4.0), point2=(
+    1.0, -4.0))
+mdb.models['Model-1'].sketches['__profile__'].HorizontalConstraint(
+    addUndoState=False, entity=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[7])
+mdb.models['Model-1'].sketches['__profile__'].PerpendicularConstraint(
+    addUndoState=False, entity1=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[3], entity2=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[7])
+mdb.models['Model-1'].sketches['__profile__'].EllipseByCenterPerimeter(
+    axisPoint1=(0.0, -2.0), axisPoint2=(1.0, -4.0), center=(0.0, -4.0))
+mdb.models['Model-1'].sketches['__profile__'].autoTrimCurve(curve1=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[8], point1=(
+    0.936398506164551, -4.54729175567627))
+mdb.models['Model-1'].parts['Part-1'].Cut(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].Material(name='Material-1')
+mdb.models['Model-1'].materials['Material-1'].Density(table=((7.85e-05, ), ))
+mdb.models['Model-1'].materials['Material-1'].Elastic(table=((200000.0, 0.3), 
+    ))
+mdb.models['Model-1'].HomogeneousSolidSection(material='Material-1', name=
+    'Section-1', thickness=None)
+mdb.models['Model-1'].parts['Part-1'].Set(faces=
+    mdb.models['Model-1'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-1')
+mdb.models['Model-1'].parts['Part-1'].SectionAssignment(offset=0.0, 
+    offsetField='', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['Part-1'].sets['Set-1'], sectionName=
+    'Section-1', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].rootAssembly.DatumCsysByDefault(CARTESIAN)
+mdb.models['Model-1'].rootAssembly.Instance(dependent=ON, name='Part-1-1', 
+    part=mdb.models['Model-1'].parts['Part-1'])
+mdb.models['Model-1'].StaticStep(name='Step-1', previous='Initial')
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#12 ]', ), ), name='Set-1')
+mdb.models['Model-1'].EncastreBC(createStepName='Initial', localCsys=None, 
+    name='BC-1', region=mdb.models['Model-1'].rootAssembly.sets['Set-1'])
+mdb.models['Model-1'].rootAssembly.Surface(name='Surf-1', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#8 ]', ), ))
+mdb.models['Model-1'].Pressure(amplitude=UNSET, createStepName='Step-1', 
+    distributionType=UNIFORM, field='', magnitude=50.0, name='Load-1', region=
+    mdb.models['Model-1'].rootAssembly.surfaces['Surf-1'])
+mdb.models['Model-1'].rootAssembly.Surface(name='Surf-2', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#4 ]', ), ))
+mdb.models['Model-1'].Pressure(amplitude=UNSET, createStepName='Step-1', 
+    distributionType=UNIFORM, field='', magnitude=50.0, name='Load-2', region=
+    mdb.models['Model-1'].rootAssembly.surfaces['Surf-2'])
+mdb.models['Model-1'].rootAssembly.makeIndependent(instances=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.seedPartInstance(deviationFactor=0.1, 
+    minSizeFactor=0.1, regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ), size=0.1)
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=0.1)
+mdb.models['Model-1'].rootAssembly.setMeshControls(algorithm=MEDIAL_AXIS, 
+    elemShape=QUAD, regions=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='Job-1', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.jobs.changeKey(fromName='Job-1', toName='Qin')
+mdb.jobs['Qin'].submit(consistencyChecking=OFF)
+mdb.jobs['Qin']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\Qin.odb', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 13872, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'Qin', 'memory': 27.0})
+mdb.jobs['Qin']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'Qin', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['Qin']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 13:30:29 2023', 
+    'jobName': 'Qin'})
+del mdb.models['Model-1'].loads['Load-1']
+mdb.models['Model-1'].loads['Load-2'].setValues(magnitude=-50.0)
+mdb.models['Model-1'].ConstrainedSketch(name='__edit__', objectToCopy=
+    mdb.models['Model-1'].parts['Part-1'].features['Shell planar-1'].sketch)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__edit__'], 
+    upToFeature=
+    mdb.models['Model-1'].parts['Part-1'].features['Shell planar-1'])
+mdb.models['Model-1'].sketches['__edit__'].Line(point1=(0.0, 0.0), point2=(4.0, 
+    0.0))
+mdb.models['Model-1'].sketches['__edit__'].HorizontalConstraint(addUndoState=
+    False, entity=mdb.models['Model-1'].sketches['__edit__'].geometry[6])
+mdb.models['Model-1'].sketches['__edit__'].PerpendicularConstraint(
+    addUndoState=False, entity1=
+    mdb.models['Model-1'].sketches['__edit__'].geometry[2], entity2=
+    mdb.models['Model-1'].sketches['__edit__'].geometry[6])
+mdb.models['Model-1'].sketches['__edit__'].undo()
+mdb.models['Model-1'].sketches['__edit__'].ObliqueDimension(textPoint=(
+    0.810505628585815, 0.52895188331604), value=40.0, vertex1=
+    mdb.models['Model-1'].sketches['__edit__'].vertices[3], vertex2=
+    mdb.models['Model-1'].sketches['__edit__'].vertices[0])
+mdb.models['Model-1'].sketches['__edit__'].ObliqueDimension(textPoint=(
+    8.76950359344482, -4.0189094543457), value=40.0, vertex1=
+    mdb.models['Model-1'].sketches['__edit__'].vertices[2], vertex2=
+    mdb.models['Model-1'].sketches['__edit__'].vertices[3])
+mdb.models['Model-1'].sketches['__edit__'].undo()
+mdb.models['Model-1'].sketches['__edit__'].undo()
+mdb.models['Model-1'].sketches['__edit__'].scale(objectList=(
+    mdb.models['Model-1'].sketches['__edit__'].geometry[2], 
+    mdb.models['Model-1'].sketches['__edit__'].geometry[3], 
+    mdb.models['Model-1'].sketches['__edit__'].geometry[4], 
+    mdb.models['Model-1'].sketches['__edit__'].geometry[5]), scaleCenter=(0.0, 
+    -4.0), scaleValue=10.0)
+mdb.models['Model-1'].parts['Part-1'].features['Shell planar-1'].setValues(
+    sketch=mdb.models['Model-1'].sketches['__edit__'])
+del mdb.models['Model-1'].sketches['__edit__']
+mdb.models['Model-1'].parts['Part-1'].regenerate()
+del mdb.models['Model-1'].parts['Part-1'].features['Cut extrude-1']
+mdb.models['Model-1'].ConstrainedSketch(gridSpacing=2.82, name='__profile__', 
+    sheetSize=113.13)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+del mdb.models['Model-1'].parts['Part-1']
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(0.0, 0.0), 
+    point2=(40.0, 40.0))
+mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Part-1', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['Part-1'].BaseShell(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(gridSpacing=2.82, name='__profile__', 
+    sheetSize=113.13)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__profile__'])
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, 0.0), point2=(
+    0.0, 20.0))
+mdb.models['Model-1'].sketches['__profile__'].VerticalConstraint(addUndoState=
+    False, entity=mdb.models['Model-1'].sketches['__profile__'].geometry[6])
+mdb.models['Model-1'].sketches['__profile__'].PerpendicularConstraint(
+    addUndoState=False, entity1=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[2], entity2=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[6])
+mdb.models['Model-1'].sketches['__profile__'].Line(point1=(0.0, 0.0), point2=(
+    10.0, 0.0))
+mdb.models['Model-1'].sketches['__profile__'].HorizontalConstraint(
+    addUndoState=False, entity=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[7])
+mdb.models['Model-1'].sketches['__profile__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['Model-1'].sketches['__profile__'].geometry[2], 
+    entity2=mdb.models['Model-1'].sketches['__profile__'].geometry[7])
+mdb.models['Model-1'].sketches['__profile__'].EllipseByCenterPerimeter(
+    axisPoint1=(0.0, 20.0), axisPoint2=(10.0, 0.0), center=(0.0, 0.0))
+mdb.models['Model-1'].sketches['__profile__'].autoTrimCurve(curve1=
+    mdb.models['Model-1'].sketches['__profile__'].geometry[8], point1=(
+    9.37344551086426, -7.27947568893433))
+mdb.models['Model-1'].parts['Part-1'].Cut(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].rootAssembly.regenerate()
+del mdb.models['Model-1'].boundaryConditions['BC-1']
+mdb.models['Model-1'].EncastreBC(createStepName='Initial', localCsys=None, 
+    name='BC-1', region=Region(
+    edges=mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#12 ]', ), )))
+del mdb.models['Model-1'].loads['Load-2']
+mdb.models['Model-1'].Pressure(amplitude=UNSET, createStepName='Step-1', 
+    distributionType=UNIFORM, field='', magnitude=-50.0, name='Load-1', region=
+    Region(
+    side1Edges=mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#4 ]', ), )))
+mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(variables=(
+    'S', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U'))
+mdb.models['Model-1'].parts['Part-1'].SectionAssignment(offset=0.0, 
+    offsetField='', offsetType=MIDDLE_SURFACE, region=Region(
+    faces=mdb.models['Model-1'].parts['Part-1'].faces.getSequenceFromMask(
+    mask=('[#1 ]', ), )), sectionName='Section-1', thicknessAssignment=
+    FROM_SECTION)
+mdb.models['Model-1'].rootAssembly.regenerate()
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=8.0)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='Model-1-Copy', objectToCopy=mdb.models['Model-1'])
+mdb.models['Model-1-Copy'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1-Copy'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1-Copy'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1-Copy'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1-Copy'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['Model-1-Copy'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='Model-1-Copy-Copy', objectToCopy=mdb.models['Model-1-Copy'])
+mdb.models['Model-1-Copy-Copy'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1-Copy-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1-Copy-Copy'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1-Copy-Copy'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['Model-1-Copy-Copy'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1-Copy-Copy'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['Qin'].submit(consistencyChecking=OFF)
+mdb.jobs['Qin']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\Qin.odb', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 10152, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'Qin', 'memory': 24.0})
+mdb.jobs['Qin']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'Qin', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['Qin']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 14:54:34 2023', 
+    'jobName': 'Qin'})
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1-Copy-Copy', modelPrint=
+    OFF, multiprocessingMode=DEFAULT, name='rec-mesh-4', nodalOutputPrecision=
+    SINGLE, numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, 
+    scratch='', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+del mdb.jobs['rec-mesh-4']
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1-Copy', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='rec-mesh-4', nodalOutputPrecision=SINGLE
+    , numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, 
+    scratch='', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1-Copy-Copy', modelPrint=
+    OFF, multiprocessingMode=DEFAULT, name='rec-mesh-2', nodalOutputPrecision=
+    SINGLE, numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, 
+    scratch='', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.jobs['rec-mesh-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-mesh-4'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-mesh-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-mesh-2.odb', 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 21776, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-mesh-2', 'memory': 24.0})
+mdb.jobs['rec-mesh-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-mesh-2', 'severe': 0, 'iterations': 1, 
+    'phase': STANDARD_PHASE, 'equilibrium': 1})
+mdb.jobs['rec-mesh-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 
+    'stepId': 1, 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-2']._Message(JOB_COMPLETED, {
+    'time': 'Fri Jul 21 14:58:54 2023', 'jobName': 'rec-mesh-2'})
+mdb.jobs['rec-mesh-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-mesh-4.odb', 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 14772, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-mesh-4', 'memory': 24.0})
+mdb.jobs['rec-mesh-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-mesh-4', 'severe': 0, 'iterations': 1, 
+    'phase': STANDARD_PHASE, 'equilibrium': 1})
+mdb.jobs['rec-mesh-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 
+    'stepId': 1, 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-mesh-4'})
+mdb.jobs['rec-mesh-4']._Message(JOB_COMPLETED, {
+    'time': 'Fri Jul 21 14:58:59 2023', 'jobName': 'rec-mesh-4'})
+mdb.Model(name='tri-8', objectToCopy=mdb.models['Model-1'])
+mdb.models['tri-8'].rootAssembly.deleteMesh(regions=(
+    mdb.models['tri-8'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['tri-8'].rootAssembly.setMeshControls(elemShape=TRI, regions=
+    mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['tri-8'].rootAssembly.generateMesh(regions=(
+    mdb.models['tri-8'].rootAssembly.instances['Part-1-1'], ))
+del mdb.models['tri-8'].boundaryConditions['BC-1']
+mdb.models['tri-8'].DisplacementBC(amplitude=UNSET, createStepName='Initial', 
+    distributionType=UNIFORM, fieldName='', localCsys=None, name='BC-1', 
+    region=Region(
+    edges=mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#12 ]', ), )), u1=UNSET, u2=SET, ur3=SET)
+mdb.models['tri-8'].boundaryConditions['BC-1'].setValues(region=Region(
+    edges=mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#10 ]', ), )))
+mdb.models['tri-8'].DisplacementBC(amplitude=UNSET, createStepName='Initial', 
+    distributionType=UNIFORM, fieldName='', localCsys=None, name='BC-2', 
+    region=Region(
+    edges=mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#2 ]', ), )), u1=SET, u2=UNSET, ur3=SET)
+mdb.models['tri-8'].boundaryConditions['BC-1'].setValues(u1=SET, u2=UNSET)
+mdb.models['tri-8'].boundaryConditions['BC-2'].setValues(u1=UNSET, u2=SET)
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='tri-8', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='tri-8', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.jobs['tri-8'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-8']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-8.odb', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 24660, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-8', 'memory': 24.0})
+mdb.jobs['tri-8']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-8', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-8']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:11:53 2023', 
+    'jobName': 'tri-8'})
+mdb.models['tri-8'].XsymmBC(createStepName='Initial', localCsys=None, name=
+    'BC-3', region=Region(
+    edges=mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#10 ]', ), )))
+mdb.models['tri-8'].YsymmBC(createStepName='Initial', localCsys=None, name=
+    'BC-4', region=Region(
+    edges=mdb.models['tri-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#2 ]', ), )))
+del mdb.models['tri-8'].boundaryConditions['BC-1']
+del mdb.models['tri-8'].boundaryConditions['BC-2']
+mdb.jobs['tri-8'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-8']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-8.odb', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 10364, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-8', 'memory': 24.0})
+mdb.jobs['tri-8']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-8', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-8']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-8'})
+mdb.jobs['tri-8']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:16:45 2023', 
+    'jobName': 'tri-8'})
+mdb.Model(name='tri-4', objectToCopy=mdb.models['tri-8'])
+mdb.models['tri-4'].rootAssembly.deleteMesh(regions=(
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['tri-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['tri-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='tri-2', objectToCopy=mdb.models['tri-4'])
+mdb.models['tri-2'].rootAssembly.deleteMesh(regions=(
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['tri-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['tri-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='tri-4', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='tri-4', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='tri-2', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='tri-2', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.jobs['tri-4'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-2'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-4.odb', 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 27128, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-4', 'memory': 24.0})
+mdb.jobs['tri-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-4', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-4'})
+mdb.jobs['tri-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-4']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:22:02 2023', 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-2.odb', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 26460, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-2', 'memory': 24.0})
+mdb.jobs['tri-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:22:08 2023', 
+    'jobName': 'tri-2'})
+mdb.models.changeKey(fromName='Model-1-Copy', toName='rec-4')
+mdb.models['rec-4'].boundaryConditions['BC-1'].setValues(typeName=XSYMM)
+mdb.models['rec-4'].YsymmBC(createStepName='Initial', localCsys=None, name=
+    'BC-2', region=Region(
+    edges=mdb.models['rec-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#2 ]', ), )))
+mdb.models['rec-4'].boundaryConditions['BC-1'].setValues(region=Region(
+    edges=mdb.models['rec-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#10 ]', ), )))
+del mdb.jobs['rec-mesh-2']
+del mdb.jobs['rec-mesh-4']
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='rec-4', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='rec-4', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.models.changeKey(fromName='Model-1-Copy-Copy', toName='rec -2')
+mdb.models['rec -2'].boundaryConditions['BC-1'].setValues(region=Region(
+    edges=mdb.models['rec -2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#10 ]', ), )), typeName=XSYMM)
+mdb.models['rec -2'].YsymmBC(createStepName='Initial', localCsys=None, name=
+    'BC-2', region=Region(
+    edges=mdb.models['rec -2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#2 ]', ), )))
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='rec -2', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='rec-2', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.jobs['rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-2.odb', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 27388, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-2', 'memory': 24.0})
+mdb.jobs['rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:26:10 2023', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-4'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-4.odb', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 24948, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-4', 'memory': 24.0})
+mdb.jobs['rec-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-4', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:26:21 2023', 
+    'jobName': 'rec-4'})
+mdb.models['Model-1'].boundaryConditions['BC-1'].setValues(region=Region(
+    edges=mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#10 ]', ), )), typeName=XSYMM)
+mdb.models['Model-1'].YsymmBC(createStepName='Initial', localCsys=None, name=
+    'BC-2', region=Region(
+    edges=mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#2 ]', ), )))
+mdb.jobs['Qin'].submit(consistencyChecking=OFF)
+mdb.jobs['Qin']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\Qin.odb', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 25248, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'Qin', 'memory': 24.0})
+mdb.jobs['Qin']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'Qin', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['Qin']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'Qin'})
+mdb.jobs['Qin']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:28:33 2023', 
+    'jobName': 'Qin'})
+mdb.jobs['rec-4'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-4.odb', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 27008, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-4', 'memory': 24.0})
+mdb.jobs['rec-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-4', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:40:30 2023', 
+    'jobName': 'rec-4'})
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='111111', nodalOutputPrecision=SINGLE, 
+    numCpus=8, numDomains=8, numGPUs=0, queue=None, resultsFormat=ODB, scratch=
+    '', type=ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=1.0)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['111111'].submit(consistencyChecking=OFF)
+mdb.jobs['111111']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\111111.odb', 'jobName': '111111'})
+mdb.jobs['111111']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': '111111'})
+mdb.jobs['111111']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 14644, 'jobName': '111111'})
+mdb.jobs['111111']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': '111111', 'memory': 27.0})
+mdb.jobs['111111']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': '111111'})
+mdb.jobs['111111']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': '111111', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['111111']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': '111111'})
+mdb.jobs['111111']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:45:03 2023', 
+    'jobName': '111111'})
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=0.1)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=0.5)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['111111'].submit(consistencyChecking=OFF)
+mdb.jobs['111111']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\111111.odb', 'jobName': '111111'})
+mdb.jobs['111111']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': '111111'})
+mdb.jobs['111111']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 25624, 'jobName': '111111'})
+mdb.jobs['111111']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': '111111', 'memory': 38.0})
+mdb.jobs['111111']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': '111111'})
+mdb.jobs['111111']._Message(MINIMUM_MEMORY, {'minimum_memory': 20.0, 
+    'phase': STANDARD_PHASE, 'jobName': '111111'})
+mdb.jobs['111111']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': '111111'})
+mdb.jobs['111111']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': '111111', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['111111']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': '111111'})
+mdb.jobs['111111']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': '111111'})
+mdb.jobs['111111']._Message(JOB_COMPLETED, {'time': 'Fri Jul 21 15:46:38 2023', 
+    'jobName': '111111'})
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=8.0)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.Set(name='NODE-rec-8', nodes=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].nodes.getSequenceFromMask(
+    mask=('[#ffffffff #f ]', ), ))
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#10 ]', ), ), name='Set-12')
+mdb.models['Model-1'].DisplacementBC(amplitude=UNSET, createStepName='Initial', 
+    distributionType=UNIFORM, fieldName='', localCsys=None, name='BC-3', 
+    region=mdb.models['Model-1'].rootAssembly.sets['Set-12'], u1=SET, u2=UNSET, 
+    ur3=UNSET)
+del mdb.models['Model-1'].boundaryConditions['BC-1']
+del mdb.models['Model-1'].boundaryConditions['BC-2']
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#2 ]', ), ), name='Set-11')
+mdb.models['Model-1'].DisplacementBC(amplitude=UNSET, createStepName='Initial', 
+    distributionType=UNIFORM, fieldName='', localCsys=None, name='BC-2', 
+    region=mdb.models['Model-1'].rootAssembly.sets['Set-11'], u1=UNSET, u2=SET, 
+    ur3=UNSET)
+mdb.models['Model-1'].SurfaceTraction(createStepName='Step-1', directionVector=
+    (mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].vertices[1], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].vertices[2]), 
+    distributionType=UNIFORM, field='', localCsys=None, magnitude=50.0, name=
+    'Load-2', region=Region(
+    side1Edges=mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    mask=('[#4 ]', ), )), traction=GENERAL)
+del mdb.models['Model-1'].loads['Load-1']
+del mdb.jobs['111111']
+mdb.jobs.changeKey(fromName='Qin', toName='rec-8')
+mdb.jobs['rec-8'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-8']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-8.odb', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 17844, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-8', 'memory': 24.0})
+mdb.jobs['rec-8']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-8', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-8']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 12:31:41 2023', 
+    'jobName': 'rec-8'})
+del mdb.models['rec -2']
+mdb.Model(name='rec -2', objectToCopy=mdb.models['Model-1'])
+mdb.models['rec -2'].rootAssembly.deleteMesh(regions=
+    mdb.models['rec -2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['rec -2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['rec -2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['rec -2'].rootAssembly.generateMesh(regions=(
+    mdb.models['rec -2'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-2.odb', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 17220, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-2', 'memory': 24.0})
+mdb.jobs['rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 12:36:55 2023', 
+    'jobName': 'rec-2'})
+del mdb.models['rec-4']
+mdb.Model(name='rec-4', objectToCopy=mdb.models['Model-1'])
+mdb.models['rec-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['rec-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['rec-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['rec-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['rec-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['rec-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['rec-4'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-4.odb', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 20068, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-4', 'memory': 24.0})
+mdb.jobs['rec-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-4', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-4'})
+mdb.jobs['rec-4']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 12:38:21 2023', 
+    'jobName': 'rec-4'})
+del mdb.models['tri-2']
+mdb.Model(name='tri-2', objectToCopy=mdb.models['Model-1'])
+mdb.models['tri-2'].rootAssembly.deleteMesh(regions=
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['tri-2'].rootAssembly.setMeshControls(elemShape=TRI, regions=
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['tri-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['tri-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['tri-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['tri-2'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-2.odb', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 13876, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-2', 'memory': 24.0})
+mdb.jobs['tri-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:07:12 2023', 
+    'jobName': 'tri-2'})
+del mdb.models['tri-4']
+mdb.Model(name='tri-4', objectToCopy=mdb.models['tri-2'])
+mdb.models['tri-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['tri-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['tri-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['tri-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs['tri-4'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-4']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-4.odb', 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 7328, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-4', 'memory': 24.0})
+mdb.jobs['tri-4']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-4', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-4']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-4'})
+mdb.jobs['tri-4']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:08:55 2023', 
+    'jobName': 'tri-4'})
+del mdb.models['tri-8']
+mdb.Model(name='tri-8', objectToCopy=mdb.models['tri-2'])
+mdb.models['rec -2'].fieldOutputRequests['F-Output-1'].setValues(variables=(
+    'S', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U', 'ENER'))
+mdb.jobs['rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-2.odb', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 23124, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-2', 'memory': 24.0})
+mdb.jobs['rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:24:30 2023', 
+    'jobName': 'rec-2'})
+mdb.models['rec -2'].fieldOutputRequests['F-Output-1'].setValues(variables=(
+    'S', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U', 'ENER', 'ELEDEN'))
+mdb.jobs['rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-2.odb', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 24204, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-2', 'memory': 24.0})
+mdb.jobs['rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:27:34 2023', 
+    'jobName': 'rec-2'})
+mdb.models['rec -2'].fieldOutputRequests['F-Output-1'].setValues(variables=(
+    'S', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U', 'ENER', 'ELEN', 'ELEDEN'))
+mdb.jobs['rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-2.odb', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 12632, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-2', 'memory': 24.0})
+mdb.jobs['rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-2'})
+mdb.jobs['rec-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:31:35 2023', 
+    'jobName': 'rec-2'})
+mdb.models['tri-2'].fieldOutputRequests['F-Output-1'].setValues(variables=('S', 
+    'PE', 'PEEQ', 'PEMAG', 'LE', 'U', 'ENER', 'ELEN', 'ELEDEN'))
+mdb.jobs['tri-2'].submit(consistencyChecking=OFF)
+mdb.jobs['tri-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\tri-2.odb', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 15224, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'tri-2', 'memory': 24.0})
+mdb.jobs['tri-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'tri-2', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['tri-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'tri-2'})
+mdb.jobs['tri-2']._Message(JOB_COMPLETED, {'time': 'Thu Aug 17 13:35:13 2023', 
+    'jobName': 'tri-2'})
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.jobs['rec-8'].submit(consistencyChecking=OFF)
+mdb.jobs['rec-8']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\rec-8.odb', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 30524, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'rec-8', 'memory': 24.0})
+mdb.jobs['rec-8']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'rec-8', 'severe': 0, 'iterations': 1, 'phase': STANDARD_PHASE, 
+    'equilibrium': 1})
+mdb.jobs['rec-8']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'rec-8'})
+mdb.jobs['rec-8']._Message(JOB_COMPLETED, {'time': 'Fri Aug 18 22:06:27 2023', 
+    'jobName': 'rec-8'})
+# Save by 22515 on 2023_08_22-19.50.06; build 2021 2020_03_06-15.50.37 167380
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].ConstrainedSketch(gridSpacing=2.82, name='__profile__', 
+    sheetSize=113.13)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__profile__'])
+mdb.models['Model-1'].sketches['__profile__'].offset(distance=20.0, objectList=
+    (mdb.models['Model-1'].sketches['__profile__'].geometry[5], ), side=LEFT)
+mdb.models['Model-1'].sketches['__profile__'].undo()
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(name='__edit__', objectToCopy=
+    mdb.models['Model-1'].parts['Part-1'].features['Cut extrude-1'].sketch)
+mdb.models['Model-1'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['Model-1'].sketches['__edit__'], 
+    upToFeature=
+    mdb.models['Model-1'].parts['Part-1'].features['Cut extrude-1'])
+mdb.models['Model-1'].sketches['__edit__'].Line(point1=(0.0, 0.0), point2=(
+    20.0, 0.0))
+mdb.models['Model-1'].sketches['__edit__'].HorizontalConstraint(addUndoState=
+    False, entity=mdb.models['Model-1'].sketches['__edit__'].geometry[13])
+mdb.models['Model-1'].sketches['__edit__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['Model-1'].sketches['__edit__'].geometry[2], 
+    entity2=mdb.models['Model-1'].sketches['__edit__'].geometry[13])
+mdb.models['Model-1'].sketches['__edit__'].undo()
+mdb.models['Model-1'].sketches['__edit__'].CircleByCenterPerimeter(center=(0.0, 
+    0.0), point1=(0.0, 20.0))
+mdb.models['Model-1'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['Model-1'].sketches['__edit__'].geometry[13], point1=(
+    -6.5959300994873, 18.8913631439209))
+mdb.models['Model-1'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['Model-1'].sketches['__edit__'].geometry[7], point1=(
+    5.50163650512695, 0.0768842697143555))
+mdb.models['Model-1'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['Model-1'].sketches['__edit__'].geometry[10], point1=(
+    9.6173038482666, 3.05425930023193))
+mdb.models['Model-1'].sketches['__edit__'].Line(point1=(0.0, 0.0), point2=(
+    20.0, 0.0))
+mdb.models['Model-1'].sketches['__edit__'].HorizontalConstraint(addUndoState=
+    False, entity=mdb.models['Model-1'].sketches['__edit__'].geometry[15])
+mdb.models['Model-1'].sketches['__edit__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['Model-1'].sketches['__edit__'].geometry[2], 
+    entity2=mdb.models['Model-1'].sketches['__edit__'].geometry[15])
+mdb.models['Model-1'].parts['Part-1'].features['Cut extrude-1'].setValues(
+    sketch=mdb.models['Model-1'].sketches['__edit__'])
+del mdb.models['Model-1'].sketches['__edit__']
+mdb.models['Model-1'].parts['Part-1'].regenerate()
+mdb.Model(name='Model-1-1', objectToCopy=mdb.models['Model-1'])
+mdb.models.changeKey(fromName='Model-1', toName='rec-8')
+mdb.models.changeKey(fromName='Model-1-1', toName='a=1 rec-8')
+mdb.models['a=1 rec-8'].ConstrainedSketch(name='__edit__', objectToCopy=
+    mdb.models['a=1 rec-8'].parts['Part-1'].features['Cut extrude-1'].sketch)
+mdb.models['a=1 rec-8'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['a=1 rec-8'].sketches['__edit__'], 
+    upToFeature=
+    mdb.models['a=1 rec-8'].parts['Part-1'].features['Cut extrude-1'])
+mdb.models['a=1 rec-8'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[15], point1=(
+    8.54052734375, 0.381507873535156))
+mdb.models['a=1 rec-8'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[14], point1=(
+    17.7000465393066, 8.9237174987793))
+mdb.models['a=1 rec-8'].sketches['__edit__'].Line(point1=(0.0, 0.0), point2=(
+    1.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].HorizontalConstraint(addUndoState=
+    False, entity=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[18])
+mdb.models['a=1 rec-8'].sketches['__edit__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[2], 
+    entity2=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[18])
+mdb.models['a=1 rec-8'].sketches['__edit__'].ArcByCenterEnds(center=(0.0, 0.0), 
+    direction=COUNTERCLOCKWISE, point1=(0.0, 20.0), point2=(1.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].CoincidentConstraint(addUndoState=
+    False, entity1=mdb.models['a=1 rec-8'].sketches['__edit__'].vertices[11], 
+    entity2=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[18])
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].Arc3Points(point1=(1.0, 0.0), 
+    point2=(0.0, 0.0), point3=(0.0, 20.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].ArcByCenterEnds(center=(0.0, 0.0), 
+    direction=COUNTERCLOCKWISE, point1=(1.0, 0.0), point2=(0.0, 20.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].CoincidentConstraint(addUndoState=
+    False, entity1=mdb.models['a=1 rec-8'].sketches['__edit__'].vertices[11], 
+    entity2=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[6])
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+mdb.models['a=1 rec-8'].sketches['__edit__'].undo()
+#* Nothing to undo.
+mdb.models['a=1 rec-8'].sketches['__edit__'].Line(point1=(0.0, 0.0), point2=(
+    1.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].HorizontalConstraint(addUndoState=
+    False, entity=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[16])
+mdb.models['a=1 rec-8'].sketches['__edit__'].ParallelConstraint(addUndoState=
+    False, entity1=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[2], 
+    entity2=mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[16])
+mdb.models['a=1 rec-8'].sketches['__edit__'].EllipseByCenterPerimeter(
+    axisPoint1=(0.0, 20.0), axisPoint2=(1.0, 0.0), center=(0.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[17], point1=(
+    -0.940542221069336, 1.50271272659302))
+mdb.models['a=1 rec-8'].sketches['__edit__'].autoTrimCurve(curve1=
+    mdb.models['a=1 rec-8'].sketches['__edit__'].geometry[14], point1=(
+    16.4883060455322, 11.115442276001))
+del mdb.models['a=1 rec-8'].sketches['__edit__']
+del mdb.models['a=1 rec-8'].parts['Part-1'].features['Cut extrude-1']
+mdb.models['a=1 rec-8'].ConstrainedSketch(gridSpacing=2.82, name='__profile__', 
+    sheetSize=113.13)
+mdb.models['a=1 rec-8'].parts['Part-1'].projectReferencesOntoSketch(filter=
+    COPLANAR_EDGES, sketch=mdb.models['a=1 rec-8'].sketches['__profile__'])
+mdb.models['a=1 rec-8'].sketches['__profile__'].Line(point1=(0.0, 0.0), point2=
+    (0.0, 20.0))
+mdb.models['a=1 rec-8'].sketches['__profile__'].VerticalConstraint(
+    addUndoState=False, entity=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[6])
+mdb.models['a=1 rec-8'].sketches['__profile__'].PerpendicularConstraint(
+    addUndoState=False, entity1=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[2], entity2=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[6])
+mdb.models['a=1 rec-8'].sketches['__profile__'].Line(point1=(0.0, 0.0), point2=
+    (1.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__profile__'].HorizontalConstraint(
+    addUndoState=False, entity=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[7])
+mdb.models['a=1 rec-8'].sketches['__profile__'].ParallelConstraint(
+    addUndoState=False, entity1=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[2], entity2=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[7])
+mdb.models['a=1 rec-8'].sketches['__profile__'].EllipseByCenterPerimeter(
+    axisPoint1=(1.0, 0.0), axisPoint2=(0.0, 20.0), center=(0.0, 0.0))
+mdb.models['a=1 rec-8'].sketches['__profile__'].autoTrimCurve(curve1=
+    mdb.models['a=1 rec-8'].sketches['__profile__'].geometry[8], point1=(
+    -0.947063446044922, -6.30680990219116))
+mdb.models['a=1 rec-8'].parts['Part-1'].Cut(sketch=
+    mdb.models['a=1 rec-8'].sketches['__profile__'])
+del mdb.models['a=1 rec-8'].sketches['__profile__']
+mdb.models['a=1 rec-8'].rootAssembly.regenerate()
+mdb.models['a=1 rec-8'].rootAssembly.Set(edges=
+    mdb.models['a=1 rec-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#2 ]', ), ), name='Set-13')
+mdb.models['a=1 rec-8'].boundaryConditions['BC-2'].setValues(region=
+    mdb.models['a=1 rec-8'].rootAssembly.sets['Set-13'])
+mdb.models['a=1 rec-8'].rootAssembly.Set(edges=
+    mdb.models['a=1 rec-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#10 ]', ), ), name='Set-14')
+mdb.models['a=1 rec-8'].boundaryConditions['BC-3'].setValues(region=
+    mdb.models['a=1 rec-8'].rootAssembly.sets['Set-14'])
+mdb.models['a=1 rec-8'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=1 rec-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=8.0)
+mdb.models['a=1 rec-8'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 rec-8'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=1 rec-2', objectToCopy=mdb.models['a=1 rec-8'])
+mdb.models['a=1 rec-2'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=1 rec-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 rec-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=1 rec-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['a=1 rec-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 rec-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=1 rec-4', objectToCopy=mdb.models['a=1 rec-2'])
+mdb.models['a=1 rec-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=1 rec-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 rec-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=1 rec-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['a=1 rec-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 rec-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=1 tri-8', objectToCopy=mdb.models['a=1 rec-8'])
+mdb.models['a=1 tri-8'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=1 tri-8'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 tri-8'].rootAssembly.setMeshControls(elemShape=TRI, regions=
+    mdb.models['a=1 tri-8'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 tri-8'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 tri-8'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=1 tri-2', objectToCopy=mdb.models['a=1 tri-8'])
+mdb.models['a=1 tri-2'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=1 tri-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 tri-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=1 tri-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['a=1 tri-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 tri-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=1 tri-4', objectToCopy=mdb.models['a=1 tri-2'])
+mdb.models['a=1 tri-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=1 tri-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=1 tri-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=1 tri-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['a=1 tri-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=1 tri-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.jobs.changeKey(fromName='rec-2', toName='a=1-rec-2')
+del mdb.jobs['a=1-rec-2']
+del mdb.jobs['rec-4']
+del mdb.jobs['rec-8']
+del mdb.jobs['tri-2']
+del mdb.jobs['tri-4']
+del mdb.jobs['tri-8']
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='a=1 rec-2', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='a=1-rec-2', nodalOutputPrecision=SINGLE, 
+    numCpus=1, numGPUs=0, queue=None, resultsFormat=ODB, scratch='', type=
+    ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.models['a=1 rec-2'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 rec-2'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 rec-2'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 rec-2'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=1 rec-2'].rootAssembly.regenerate()
+mdb.jobs['a=1-rec-2'].submit(consistencyChecking=OFF)
+mdb.jobs['a=1-rec-2']._Message(STARTED, {'phase': BATCHPRE_PHASE, 
+    'clientHost': 'NULLA', 'handle': 0, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(WARNING, {'phase': BATCHPRE_PHASE, 
+    'message': 'STRAIN OUTPUT REQUEST LE IS NOT VALID FOR SOME ELEMENTS IN THIS ANALYSIS. THIS REQUEST IS SWITCHED TO THE STRAIN MEASURE, E.', 
+    'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(ODB_FILE, {'phase': BATCHPRE_PHASE, 
+    'file': 'C:\\temp\\a=1-rec-2.odb', 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(COMPLETED, {'phase': BATCHPRE_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(STARTED, {'phase': STANDARD_PHASE, 
+    'clientHost': 'NULLA', 'handle': 26552, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 0, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(MEMORY_ESTIMATE, {'phase': STANDARD_PHASE, 
+    'jobName': 'a=1-rec-2', 'memory': 25.0})
+mdb.jobs['a=1-rec-2']._Message(PHYSICAL_MEMORY, {'phase': STANDARD_PHASE, 
+    'physical_memory': 16170.0, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(MINIMUM_MEMORY, {'minimum_memory': 17.0, 
+    'phase': STANDARD_PHASE, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(ODB_FRAME, {'phase': STANDARD_PHASE, 'step': 0, 
+    'frame': 1, 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(STATUS, {'totalTime': 1.0, 'attempts': 1, 
+    'timeIncrement': 1.0, 'increment': 1, 'stepTime': 1.0, 'step': 1, 
+    'jobName': 'a=1-rec-2', 'severe': 0, 'iterations': 1, 
+    'phase': STANDARD_PHASE, 'equilibrium': 1})
+mdb.jobs['a=1-rec-2']._Message(END_STEP, {'phase': STANDARD_PHASE, 'stepId': 1, 
+    'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(COMPLETED, {'phase': STANDARD_PHASE, 
+    'message': 'Analysis phase complete', 'jobName': 'a=1-rec-2'})
+mdb.jobs['a=1-rec-2']._Message(JOB_COMPLETED, {
+    'time': 'Tue Aug 22 20:09:23 2023', 'jobName': 'a=1-rec-2'})
+mdb.models['a=1 rec-4'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 rec-4'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 rec-4'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 rec-4'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=1 rec-4'].rootAssembly.regenerate()
+mdb.models['a=1 rec-8'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 rec-8'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 rec-8'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 rec-8'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=1 tri-2'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 tri-2'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 tri-2'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 tri-2'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=1 tri-4'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 tri-4'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 tri-4'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 tri-4'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=1 tri-8'].parts['Part-1'].Set(faces=
+    mdb.models['a=1 tri-8'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['a=1 tri-8'].parts['Part-1'].sectionAssignments[0].setValues(region=
+    mdb.models['a=1 tri-8'].parts['Part-1'].sets['Set-2'])
+mdb.models.changeKey(fromName='rec-8', toName='a=20 rec-8')
+mdb.models['a=20 rec-8'].rootAssembly.regenerate()
+mdb.models['a=20 rec-8'].parts['Part-1'].Set(faces=
+    mdb.models['a=20 rec-8'].parts['Part-1'].faces.getSequenceFromMask((
+    '[#1 ]', ), ), name='Set-2')
+mdb.models['a=20 rec-8'].parts['Part-1'].sectionAssignments[0].setValues(
+    region=mdb.models['a=20 rec-8'].parts['Part-1'].sets['Set-2'])
+mdb.models['a=20 rec-8'].rootAssembly.regenerate()
+mdb.models['a=20 rec-8'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=20 rec-8'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=8.0)
+mdb.models['a=20 rec-8'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 rec-8'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=20 rec-4', objectToCopy=mdb.models['a=20 rec-8'])
+mdb.models['a=20 rec-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=20 rec-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 rec-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=20 rec-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['a=20 rec-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 rec-4'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=20 rec-2', objectToCopy=mdb.models['a=20 rec-4'])
+mdb.models['a=20 rec-2'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=20 rec-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 rec-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=20 rec-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['a=20 rec-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 rec-2'].rootAssembly.instances['Part-1-1'], ))
+del mdb.models['rec -2']
+del mdb.models['rec-4']
+del mdb.models['tri-2']
+del mdb.models['tri-4']
+del mdb.models['tri-8']
+mdb.models['a=1 rec-8'].rootAssembly.regenerate()
+mdb.Model(name='a=20 tri-8', objectToCopy=mdb.models['a=20 rec-8'])
+mdb.models['a=20 tri-8'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=20 tri-8'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 tri-8'].rootAssembly.setMeshControls(elemShape=TRI, regions=
+    mdb.models['a=20 tri-8'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 tri-8'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 tri-8'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=20 tri-2', objectToCopy=mdb.models['a=20 tri-8'])
+mdb.models['a=20 tri-2'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=20 tri-2'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 tri-2'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=20 tri-2'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=2.0)
+mdb.models['a=20 tri-2'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 tri-2'].rootAssembly.instances['Part-1-1'], ))
+mdb.Model(name='a=20 tri-4', objectToCopy=mdb.models['a=20 tri-2'])
+mdb.models['a=20 tri-4'].rootAssembly.deleteMesh(regions=
+    mdb.models['a=20 tri-4'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['a=20 tri-4'].rootAssembly.seedEdgeBySize(constraint=FINER, 
+    deviationFactor=0.1, edges=
+    mdb.models['a=20 tri-4'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1f ]', ), ), minSizeFactor=0.1, size=4.0)
+mdb.models['a=20 tri-4'].rootAssembly.generateMesh(regions=(
+    mdb.models['a=20 tri-4'].rootAssembly.instances['Part-1-1'], ))
+# Save by 22515 on 2023_08_22-20.13.01; build 2021 2020_03_06-15.50.37 167380
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['a=1 tri-2'].rootAssembly.regenerate()
+mdb.models['a=1 tri-4'].rootAssembly.regenerate()
+mdb.models['a=1 tri-8'].rootAssembly.regenerate()
+# Save by 22515 on 2023_08_22-20.14.05; build 2021 2020_03_06-15.50.37 167380
