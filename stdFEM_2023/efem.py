@@ -71,6 +71,8 @@ for e, conn in enumerate(elems):
 
         # compute material matrix
         matDT = constitutive(material, dpn)
+        print('matDT', matDT)
+        print('BB', BB)
 
         k += gauss.wgt[i] * j * np.dot(np.dot(BB.T, matDT), BB)
 
@@ -86,7 +88,9 @@ F -= K[:, zero] * bcs[1]         # modify right hand side with prescribed values
 K[:,zero] = 0; K[zero,:] = 0;    # zero-out rows/columns
 K[zero,zero] = 1                 # add 1 in the diagional
 F[zero] = bcs[1]                 # prescribed values
-
+print('bcs', bcs)
+print('F', F)
+print('K', K)
 # apply loads
 F[load[0]] += load[1]
 

@@ -140,8 +140,8 @@ def Boundary(node_coords, a_b):
     return Node_list
 
 if __name__=='__main__':
-    a_b = 0.1
-    mesh_shape=1
+    a_b = 0.5
+    mesh_shape=0
     mesh_size= 8
     node_coords, element_nodes =  create_mesh(a_b=a_b, mesh_shape=mesh_shape, mesh_size=mesh_size, show=True)
     Nodes_list = Boundary(node_coords, a_b)
@@ -153,6 +153,13 @@ if __name__=='__main__':
     plt.scatter(node_coords[:, 0], node_coords[:, 1])
     for node in Nodes_list:
         print(node.id, node.xy, node.type, node.BC)
+
+    with open('/nodes_data.txt', 'w') as file:
+        # 遍历列表中的每个节点
+        for node in Nodes_list:
+            # 将每个节点的属性写入文件
+            # 使用逗号或其他分隔符分隔每个属性，以便于阅读和未来的数据解析
+            file.write(f"{node.id}, {node.xy}, {node.type}, {node.BC}\n")
     for (x, y), node in zip(node_coords, Nodes_list):
             # 在指定的坐标处显示文本
             plt.text(x, y, node.id) 

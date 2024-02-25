@@ -30,9 +30,12 @@ def force(element, GPN=2):
     E = element.E
     nu = element.nu
     F = np.zeros(n_nodes*2)
+    scale = 1 if element.shape == 'quad' else 1/2
     for i in range(n_nodes):
+        xi, eta = element.xi_eta[i]
         for g in range(len(Ws)):
             point = points[g]
+            # print(point)
             W = Ws[g]
             NP_net = element.gradshape(point[0], point[1])
             # J = jacobian(vertices, NP_net)
@@ -41,39 +44,12 @@ def force(element, GPN=2):
             # print('J', J, J_det)
             # print("J in F", J_det)
             for dof in range(2):
-                F[2*i+dof] += W * element.phis[i](point[0], point[1]) * abs(sum(J[dof]))# abs(sum(J[dof]))# J_det
+                # F[2*i+dof] += W * element.phis[i](point[0], point[1]) * abs(sum(J[dof]))# abs(sum(J[dof]))# J_det
+                F[2*i+dof] += W * element.phis[i](point[0], point[1])# * scale
+                # F[2*i+dof] += W * element.phis[i](xi, eta) # * J_det
+            
     return F
     
-
-# def stiffness(element, GPN=2):
-#     points, Ws = Gauss_points(element, GPN)
-#     n_nodes = element.n_nodes
-#     vertices = element.vertices
-#     E = element.E
-#     nu = element.nu
-#     K = np.zeros((n_nodes*2, n_nodes*2))
-#     for i in range(n_nodes):
-#         for j in range(n_nodes):
-#             Kij = np.zeros((2, 2))
-#             for g in range(len(points)):
-#                 point = points[g]
-#                 W = Ws[g]
-#                 NP_net = element.gradshape(point[0], point[1])
-#                 J = np.dot(NP_net, vertices)
-#                 # J = jacobian(vertices, NP_net)
-#                 NP = np.linalg.inv(J) @ NP_net
-#                 for a in range((len(Kij))):
-#                     for c in range((len(Kij))):
-#                         for b in range(2):
-#                             for d in range(2):
-#                                 Kij[a, c]+= NP[b, i] * constitutive(a, b, c, d, E, nu) * NP[d, j] * np.linalg.det(J) * W
-
-#                 # print(left_v)
-#             K[2*i:2*(i+1), 2*j:2*(j+1)] = Kij
-
-#     K[np.abs(K) < 1e-10] = 0
-#     return K
-
 def stiffness(element, GPN=2):
     E, nu =element.E, element.nu
     D = E / (1 - nu**2)* np.array([
@@ -102,7 +78,8 @@ def stiffness(element, GPN=2):
         # print("J = ", np.linalg.det(jacobian(vertices, NP_net.T)))
         B = element.B_matrix(J, NP_net)
         # dN = np.linalg.inv(J) @ NP_net
-        Ke += scale * W * B.T @ D @ B * J_det
+        Ke += W * B.T @ D @ B * J_det * scale
+        # Ke += W * B.T @ D @ B * J_det
         # print(np.linalg.det(J))
         # Ke += np.dot(np.dot(B.T,D),B) * np.linalg.det(J) * W
     return Ke
@@ -442,4 +419,3 @@ if __name__=="__main__":
     # plt.xlabel('x')
     # plt.ylabel('y')
     # # plt.show()
-    

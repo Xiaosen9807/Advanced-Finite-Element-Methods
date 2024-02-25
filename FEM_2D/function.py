@@ -115,3 +115,6 @@ if __name__=="__main__":
     GPN = 1
     K = stiffness(x, GPN)
     print(K)
+
+    
+    

@@ -19,9 +19,23 @@ script_dir = os.path.dirname(os.path.abspath(script_path))
 # 更改工作目录
 os.chdir(script_dir)
 
+def L_matrix(J, Nps):
+    L = np.zeros((3, 2))
+    NP_net = np.linalg.inv(J)@Nps
+    # NP_net = Nps
+    L[0, 0] = NP_net[0]  # partial derivative with respect to x
+    L[1, 1] = NP_net[1]  # partial derivative with respect to y
+    L[2, 0] = NP_net[1]  # partial derivative with respect to y
+    L[2, 1] = NP_net[0]  # partial derivative with respect to x
+    return L
+    
+
+
 def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
-    Load_x = 50  # N/mm
-    Load_y = 0  # N/mm
+    sigma_x = 50  # N/mm
+    sigma_y = 0  # N/mm
+    sigma_xy = 0  # N/mm
+    stress_vector = np.array([sigma_x, sigma_y, sigma_xy])
     A = 40  # mm^2
     nodes_coord,  element_nodes = create_mesh(a_b, mesh_shape, mesh_size)
     # with open("Coords/saved_data.pkl", "rb") as file:
@@ -43,8 +57,10 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
         #     elem = T3(this_nodes, GPN=GPN)
         try:
             elem = Q4(this_nodes, GPN=GPN)
+            elem_factor = 1
         except:
             elem = T3(this_nodes, GPN=GPN)
+            elem_factor = 1
         elem.a_b = a_b
         element_list.append(elem)
     DOFs = 2*len(nodes_list)
@@ -53,13 +69,32 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
 
     for elem in element_list:  # Assemble Force vector
         loc_F = elem.F
+        vertices = elem.vertices
         for i, node_i in enumerate(elem.nodes):
             global_dof = 2 * node_i.id
             # print(loc_F[2*i])
             if abs(node_i.xy[0]-40) < 1e-3:
-                glo_F[global_dof] += Load_x * loc_F[2*i]
+                NP_net = elem.gradshape(node_i.xy[0], node_i.xy[1])
+                J = np.dot(NP_net, vertices)
+                # print(elem.phipys[i])
+                xi, eta = elem.xi_eta[i]
+                # print(xi, eta)
+                Nps = np.array([elem.phipxs[i](xi, eta), elem.phipys[i](xi, eta)]) * elem_factor
+                # print(Nps)
+                L = L_matrix(J, Nps)
+                # Load_x, Load_y = L.T@stress_vector
+                Load_x, Load_y = sigma_x, sigma_y
+                # print(L)
+                # print(Load_x, Load_y)
+                # exit(0)
+
+                glo_F[global_dof] += Load_x + loc_F[2*i]
+                print(loc_F[2*i])
                 # glo_F[global_dof] += Load_x * 1 
-                glo_F[global_dof + 1] += Load_y * loc_F[2*i+1]
+                glo_F[global_dof + 1] += Load_y + loc_F[2*i+1]
+            else:
+                glo_F[global_dof] += loc_F[2*i]
+                glo_F[global_dof + 1] += loc_F[2*i+1]
 
     for elem in element_list:  # Assemble Stiffness matrix
         loc_K = elem.K
@@ -88,7 +123,7 @@ def FEM(a_b, mesh_size, mesh_shape, GPN=2, show=False):
                     glo_K[global_dof_i, :] = 0
                     # glo_K[:, global_dof_i] = 0
                     glo_K[global_dof_i, global_dof_i] = 1e15  # 大数约束
-                    glo_F[global_dof_i] = 0
+                    # glo_F[global_dof_i] = 0
 
     # np.set_printoptions(precision=2, suppress=True)
     # glo_K[np.abs(glo_K) < 1e-9] = 0
@@ -187,8 +222,8 @@ def draw(elements_list, dir='xy', type='disp', show = True, save=False):
 
 
 if __name__=='__main__':
-    experi = True
-    show = False
+    experi = False
+    show = True
     save = True
     GPN = 2
     refine = 3
@@ -198,8 +233,8 @@ if __name__=='__main__':
         mesh_shape_lst = [0, 1]
 
     else:
-        a_b_lst = [1]
-        mesh_size_lst = [2]
+        a_b_lst = [.5]
+        mesh_size_lst = [8]
         mesh_shape_lst = [1]
 
     data_dict = []
@@ -223,7 +258,7 @@ if __name__=='__main__':
         with open("Data/data.pkl", "wb") as f:
             pickle.dump(data_dict, f)
     # Determine global min and max values
-    dir = 'norm'
+    dir = 'x'
     type = 'disp'
     with open("Data/data.pkl", "rb") as f:
         data_ori = pickle.load(f)
