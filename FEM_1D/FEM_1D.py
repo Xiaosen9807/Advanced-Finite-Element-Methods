@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 plt.style.use('default')
 import copy
 from shape_functions import *
-from tools_1D import *
+from tools import *
 
 def h_FEM(shape_class = linear, num_elems = 3,p=3, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
     N=6
@@ -77,45 +77,33 @@ def h_FEM(shape_class = linear, num_elems = 3,p=3, domain = (0, 1),rhs_func = rh
     return U, phi_phip, uh
 
 
-def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 4, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
-    N=3
+def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 3, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
+    N=9
     mesh = np.linspace(domain[0], domain[1], num_elems+1)
-    ori_phi_phip = {'phis': [], 'phips': [], 'r_rs': []}
+    ori_phi_phip = {'phis': [], 'phips': []}
     for elem in range(num_elems):
         scale = [mesh[elem], mesh[elem+1]]
         phis, phips = shape_class(scale, p)
-        
-        this_r_r = [r_r(scale), r_r(scale)]
         ori_phi_phip['phis'].append(phis)
         ori_phi_phip['phips'].append(phips)
-        ori_phi_phip['r_rs'].append(this_r_r)
 
 
-    linear_phi_phip = {'phis': [], 'phips': [], 'r_rs': []}  # Linear
-
+    linear_phi_phip = {'phis': [], 'phips': []}  # Linear
     for elem in range(num_elems):
         linear_phis = []
         linear_phips = []
-        linear_r_rs = []
         for idx in range(len(ori_phi_phip['phis'][elem])):
             if ori_phi_phip['phis'][elem][idx].p < 2:
                 phi = ori_phi_phip['phis'][elem][idx]
                 phip = ori_phi_phip['phips'][elem][idx]
-                this_r_r = ori_phi_phip['r_rs'][elem][idx]
                 linear_phi_phip['phis'].append(phi)
                 linear_phi_phip['phips'].append(phip)
-                linear_phi_phip['r_rs'].append(this_r_r)
                 linear_phis.append(phi)
                 linear_phips.append(phip)
-                linear_r_rs.append(this_r_r)
         linear_K_sub = np.zeros((len(linear_phips), len(linear_phips)))
         for indx, x in np.ndenumerate(linear_K_sub):
-            B2 = 12
-            K_value = G_integrate(
-                # mul(linear_phips[indx[0]], linear_phips[indx[-1]]), N=N, scale=linear_phips[indx[0]].scale)
-                mul(linear_r_rs[indx[0]], linear_phips[indx[0]], linear_phips[indx[-1]]), N=N, scale=linear_phips[indx[0]].scale)
-            linear_K_sub[indx] = K_value
-            # print(K_value)
+            linear_K_sub[indx] = G_integrate(
+                mul(linear_phips[indx[0]], linear_phips[indx[-1]]), N=N, scale=linear_phips[indx[0]].scale)
             if abs(linear_K_sub[indx]) < 1e-10:
                 linear_K_sub[indx] = 0
         # print('K_sub', K_sub)
@@ -135,6 +123,7 @@ def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 4, domain = (0, 1),rhs
 
     nonlinear_phi_phip = {'phis': [], 'phips': []}
     for order in range(2, p+1):  # Non Linear
+        # print('order', order)
         for elem in range(num_elems):
             for idx in range(len(ori_phi_phip['phis'][elem])):
                 if (ori_phi_phip['phis'][elem][idx].p == order) or (ori_phi_phip['phips'][elem][idx].p == order):
@@ -146,7 +135,7 @@ def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 4, domain = (0, 1),rhs
                     # print('nonlinear_phip', nonlinear_phip.p)
                     # print(G_integrate(mul(nonlinear_phip, nonlinear_phip),N=N, scale=nonlinear_phip.scale))
                     
-                    nonlinear_K_sub[-1, -1] = G_integrate(mul(r_r, nonlinear_phip, nonlinear_phip),N=N, scale=nonlinear_phip.scale)
+                    nonlinear_K_sub[-1, -1] = G_integrate(mul(nonlinear_phip, nonlinear_phip),N=N, scale=nonlinear_phip.scale)
                     nonlinear_F_sub = np.zeros(2)
                     nonlinear_F_sub[-1] = G_integrate(mul(rhs_func, nonlinear_phi), N=N, scale=nonlinear_phi.scale)
 
@@ -157,20 +146,13 @@ def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 4, domain = (0, 1),rhs
                 
     # Applying boundary condition
 
-    # print(K)
-    # print(F)
-    # print(linear_num)
-    K[0, 1:] = 0
-    K[linear_num-1, :linear_num-1] = 0
+    K[0, 1:] = 0.0 
+    K[linear_num-1, :linear_num-1] = 0.0
     F[0] = BCs[0]* K[0, 0] # -= or = ??
     F[linear_num-1] = BCs[-1] * K[linear_num-1, linear_num-1]
 
-
-    U = la.solve(K, F)
-    # if verbose:
-    #     print("K:", K)
-    #     print("F:", F)
-    #     print("U:", U)
+    U = -la.solve(K, F)
+    # print(F)
     phi_phip = {'phis': [], 'phips': []}
     phi_phip['phis'] = joint_funcs(linear_phi_phip['phis']) + nonlinear_phi_phip['phis']
     phi_phip['phips'] = joint_funcs(linear_phi_phip['phips']) + nonlinear_phi_phip['phips']
@@ -183,15 +165,16 @@ def FEM_1D(shape_class = Hierarchical, p = 3, num_elems = 4, domain = (0, 1),rhs
         x_data = np.linspace(domain[0], domain[1], 101)
         plt.plot(x_data, exact_func(x_data), label='Analytical solution')
         plt.plot(x_data, uh(x_data), label='FEM solution {} elements'.format(num_elems))
-        # for i in range(len(phi_phip['phis'])):
-        #     func = phi_phip['phis'][i]
-        #     plt.plot(x_data, U[i]*func(x_data))
+        for i in range(len(phi_phip['phis'])):
+            func = phi_phip['phis'][i]
+            plt.plot(x_data, U[i]*func(x_data))
         plt.legend()
         plt.show()
     eigenvalues = np.linalg.eigvals(K)
     cont_K = max(eigenvalues)/min(eigenvalues)
-    
     return U, phi_phip, uh, cont_K
+
+
 
 def cal_energy(U_array, phi_phip_array):
     U_energy = 0
@@ -218,24 +201,3 @@ def cal_energy(U_array, phi_phip_array):
     # print(scale)
     # U_energy+=G_integrate(mul(plus(u_prime_list), plus(u_prime_list)),N=6, scale=scale)
     return U_energy/2
-
-
-if __name__=="__main__":
-    verbose = True
-    num_elems = 6
-    domain = (0, 1)
-    p = 1
-    mesh = np.linspace(domain[0], domain[1], num_elems+1)
-    a = .5*1
-    xb = 0.8
-    if a == 50:
-        U_init = 1.585854059271320
-    elif a == 0.5:
-        U_init = 0.03559183822564316
-    exact_func = exact_fn(a = a, xb=xb)
-    rhs_func = rhs_fn(a=a, xb=xb)
-    BCs = (exact_func(domain[0]), exact_func(domain[-1]))
-    # BCs = (71, )
-    U_l_test, phi_phip_l_test, uh_l_test, cont_K_l_test = FEM_1D(shape_class = linear,p=p, num_elems = num_elems, domain = domain,rhs_func = rhs_func,exact_func=exact_func, BCs = BCs, verbose = verbose)
-    print(BCs)
-    # cal_energy(U_l_test, phi_phip_l_test)

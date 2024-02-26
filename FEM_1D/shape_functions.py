@@ -152,16 +152,12 @@ def quadratic(scale, p):
 
 class exact_fn():
     def __init__(self, a, xb):
-        self.name = "RHS"
         self.a = a
         self.xb = xb
         self.scale = [0, 1]
 
     def __call__(self, x):
-        A0 = 72
-        muJz = 20
-        func1 = A0 - 1/4 * muJz * x**2 
-        # func1 = (1 - x) * (np.arctan(self.a * (x - self.xb)) + np.arctan(self.a*self.xb))
+        func1 = (1 - x) * (np.arctan(self.a * (x - self.xb)) + np.arctan(self.a*self.xb))
         return func1
 
     def derivative(self, input_value):
@@ -172,22 +168,12 @@ class exact_fn():
 
 class rhs_fn():
     def __init__(self, a, xb):
-        self.name = "RHS"
         self.a = a
         self.xb = xb
         self.scale = [0, 1]
         
     def __call__(self, x):
-        muJz = 20
-        func1 = muJz * x
-        # func1 = -2*(self.a+self.a**3*self.B(x)*(self.B(x)-x+1))/(self.a**2*self.B(x)**2+1)**2
+        func1 = -2*(self.a+self.a**3*self.B(x)*(self.B(x)-x+1))/(self.a**2*self.B(x)**2+1)**2
         return func1
-    # def B(self, x):
-        # return x - self.xb
-
-class r_r():
-    def __init__(self, scale):
-        self.name = "LHS"
-        self.scale = scale
-    def __call__(self, x):
-        return x
+    def B(self, x):
+        return x - self.xb

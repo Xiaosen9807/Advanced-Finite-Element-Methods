@@ -9,13 +9,31 @@ import copy
 from shape_functions import *
 from tools_1D import *
 import time
+def creat_mesh(interfaces = [0, .25, .5, .75, 1], num_elems_per_segment = 3):
+    # 初始化网格数组
+    mesh = np.array([])
+
+    # 遍历界面列表，为每个子区间生成网格
+    for i in range(len(interfaces)-1):
+        # 当前子区间的起始点和结束点
+        start, end = interfaces[i], interfaces[i+1]
+
+        # 在当前子区间内生成等间距的节点
+        # np.linspace包括区间的起始和结束点，但为避免重复添加界面节点，我们从第二个节点开始添加（当i不为0时）
+        sub_mesh = np.linspace(start, end, num_elems_per_segment + 1)
+        if i > 0:
+            sub_mesh = sub_mesh[1:]  # 移除子网格的第一个节点，因为它是上一个子网格的最后一个节点
+
+        # 将子网格添加到总网格中
+        mesh = np.concatenate((mesh, sub_mesh))
+    return mesh
 
 def creat_mesh(interfaces = [0, .25, .5, .75, 1], num_elems = 3):
     N=3
     num_elems_per_segment = num_elems
+    mesh = creat_mesh(interfaces=interfaces, num_elems=num_elems_per_segment)
     num_elems = len(interfaces) * num_elems_per_segment
     # 初始化网格数组
-    mesh = np.array([])
 
     # 遍历界面列表，为每个子区间生成网格
     for i in range(len(interfaces)-1):
@@ -35,7 +53,9 @@ def creat_mesh(interfaces = [0, .25, .5, .75, 1], num_elems = 3):
 def FEM_1D(shape_class = linear, p = 3, interfaces = [ 0, .25, 5, .75, 1], num_elems = 4, domain = (0, 1),rhs_func = rhs_fn(a=50, xb=0.8), exact_func=exact_fn(0.5,0.8), BCs = (0, 0), verbose = False):
     start_time = time.time()
     N=3
-    mesh = np.linspace(domain[0], domain[1], num_elems+1)
+    mesh = creat_mesh(interfaces, num_elems)
+    num_elems = len(interfaces) * num_elems
+
     
     ori_phi_phip = {'phis': [], 'phips': [], 'r_rs': []}
     for elem in range(num_elems):
