@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import copy
 
 def G_integrate(u, N=3, scale=(0, 1)):
-
-    name = u.name[0]
     N = N  # 取3个样本点
     a = scale[0]  # 积分上下限
     b = scale[1]
@@ -18,34 +16,18 @@ def G_integrate(u, N=3, scale=(0, 1)):
 
     xp = x*(b-a)/2+(b+a)/2
     wp = w*(b-a)/2
-    # print(wp, xp)
-    # print(scale)
-    
-    # print(u(0.0102))
 
     s = 0
     for i in range(N):
-        if name == 'LHS':
-            # s += xp[i]*wp[i]*u(xp[i])
-            s += wp[i]*u(xp[i])
-        elif name == 'RHS':
-            s += wp[i]*u(xp[i])
-        # print(s, wp[i], u(xp[i]))
-        # exit()
-        # print('s', s)
-        # print(xp[i]*wp[i]*u(xp[i]))
-        # print('u', u(xp[i]))
-            
-    # print('s', s)
+        s += wp[i]*u(xp[i])
     return s
 
 class shape_function:
-    def __init__(self, scale=[0, 1]):
-        self.name = "LHS"
+    def __init__(self, scale=[-1, 1]):
         self.scale = scale
         self.x_l = scale[0]
         self.x_r = scale[1]
-        self.range = [0, 1]
+        self.range = [-1, 1]
         
     def expression(self, x):
         return 1 - (x - self.x_l) / (self.x_r - self.x_l)
@@ -62,14 +44,7 @@ class shape_function:
         return np.where((self.scale[0] <= x) & (x <= self.scale[-1]), expression_vectorized(x), 0)
     
 class operate(shape_function):
-    """
-    Initializes the function object with a list of functions. If the input functions contain only one element and that element is a list or tuple, it is used as the function list. 
-    """
     def __init__(self, *functions):
-        try:
-            self.name = [functions[0].name]
-        except:
-            self.name = "None"
         # 如果functions只有一个元素，并且这个元素是一个列表，那么使用这个列表作为函数列表
         if len(functions) == 1 and isinstance(functions[0], (list, tuple)):
             functions = functions[0]
@@ -83,9 +58,8 @@ def joint_funcs(functions):
         raise AssertionError("Inputs must be a list!")
     elif not callable(functions[0]):
         raise AssertionError("Elements in the list must be functions!")
-    # if len(functions)%3==0: # Don't know why I had this....
-    #     chunk_size = 3
-    #     chunk_size = 2
+    if len(functions)%3==0:
+        chunk_size = 3
     elif len(functions)%2==0:
         chunk_size = 2
     spilt_list = [functions[i:i+chunk_size] for i in range(0, len(functions), chunk_size)]
@@ -157,6 +131,3 @@ def assemble(*matrices):
     if res_matrix.shape[0]<=1:
         return res_matrix[0]
     return res_matrix
-
-def cal_error(A_z_pred, A_z_exact):
-    return np.mean(np.abs(np.array(A_z_pred) - np.array(A_z_exact))) * 100

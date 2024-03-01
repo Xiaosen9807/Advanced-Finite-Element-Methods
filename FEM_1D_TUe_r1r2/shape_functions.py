@@ -7,8 +7,17 @@ from tools_1D import *
 import matplotlib.pyplot as plt
 # plt.style.use('default')
 import copy
-from consts import consts
 
+
+def Legendre(x=np.linspace(-1, 1, 100), p=5):
+
+    if p == 0:
+        return 1
+    elif p == 1:
+        return x
+
+    else:
+        return ((2*p-1)*x*Legendre(x, p-1)+(1-p)*Legendre(x, p-2))/p
 
 
 class phi_func_l(shape_function):
@@ -17,20 +26,17 @@ class phi_func_l(shape_function):
         self.p = p
         self.range = [0, 1]
     def expression(self, x):
-        scale_up = 1/(self.scale[1]-self.scale[0]) 
-
         if self.p == 0:
             phi = 1-self.mapping(x)
         elif self.p == 1:
             phi = self.mapping(x) 
         else:
             raise AssertionError("p should be 0 or 1 in linear shape function, not{}".format(self.p))
-        return phi #*scale_up
+        return phi
         
 class phip_func_l(shape_function):
     def __init__(self, scale, p):
         super().__init__(scale)
-        self.check_name = "phip_func_l"
         self.range = [0, 1]
         self.p = p
     def expression(self, x):
@@ -42,7 +48,7 @@ class phip_func_l(shape_function):
             phip = np.zeros_like(self.mapping(x))+1
         else:
             raise AssertionError("p should be 0 or 1 in linear shape function, not{}".format(self.p))
-        return phip *scale_up
+        return phip*scale_up
     
 class phi_func_q(shape_function):
     def __init__(self, scale, p):
@@ -79,6 +85,49 @@ class phip_func_q(shape_function):
             raise AssertionError("p should be -1, 0 or 1 in quadratic shape function, not{}".format(self.p))
         return phip*scale_up
     
+class phi_func_h(shape_function):
+    def __init__(self, scale, p):
+        super().__init__(scale)
+        self.p = p
+    def expression(self, x):
+        scale = self.scale
+        i =self.p
+        if i == 0:
+            phi = (1-self.mapping(x))/2 
+        elif i == 1:
+            phi = (1+self.mapping(x))/2 
+        else:
+            phi = 1/np.sqrt(4*i-2)*(Legendre(self.mapping(x), i)-Legendre(self.mapping(x), i-2))
+        return phi
+        
+class phip_func_h(shape_function):
+    def __init__(self, scale, p):
+        super().__init__(scale)
+        self.p = p
+    def expression(self, x):
+        scale_up = 2/(self.scale[1]-self.scale[0]) 
+        i =self.p
+        
+        if i == 0:
+            phip =  np.zeros_like(self.mapping(x))-0.5
+        elif i == 1:
+            phip = np.zeros_like(self.mapping(x))+0.5
+        else:
+            phip = np.sqrt(i-1/2)*(Legendre(self.mapping(x), i-1))
+        return phip*scale_up
+    
+def Hierarchical(scale, p):
+    phis = []
+    phips = []
+    start=0
+    
+    for i in range(start, p+1):
+        new_phi = phi_func_h(scale, i)
+        new_phip = phip_func_h(scale,i)
+        phis.append(new_phi)
+        phips.append(new_phip)
+    return phis, phips
+
 def linear(scale, p):
     phis = []
     phips = []
@@ -89,66 +138,37 @@ def linear(scale, p):
         phis.append(new_phi)
         phips.append(new_phip)
     return phis, phips
-def find_region(value):
-    r1 = consts["r1"]
-    r2 = consts["r2"]
-    r3 = consts["r3"]
-    r4 = consts["r4"]
 
-    # 判断值落在哪个区间
-    if 0 <= value < r1: 
-        return int(0)
-    elif r1 <= value < r2:
-        return int(1)
-    elif r2 <= value < r3:
-        return int(2)
-    elif r3 <= value <= r4:
-        return int(3)
-    else:
-        raise ValueError("Value {} is less than 0 or larger than r4".format(value))
-
+def quadratic(scale, p):
+    phis = []
+    phips = []
+    p = 1
+    for i in range(-1, p+1):
+        new_phi = phi_func_q(scale, i)
+        new_phip = phip_func_q(scale,i)
+        phis.append(new_phi)
+        phips.append(new_phip)
+    return phis, phips
 
 class exact_fn():
-    def __init__(self,):
+    def __init__(self, a, xb):
         self.name = "RHS"
+        self.a = a
+        self.xb = xb
         self.scale = [0, 1]
-        self.mu = 1
-        self.mu0 = 1.257*10**-6 # H/m
-        self.Jz = -1326291.1924324587
-        self.B0 = -0.0001302459397568438
-        self.A0 = -0.0006358641469510412
 
- 
     def __call__(self, x):
-        # 检查x是否为单个数字，如果是，将其转换为一个元素的数组
-        single_value = np.isscalar(x)
-        if single_value:
-            x = np.array([x])
+        A0 = 100
+        muJz = 20
+        func1 = A0 - 1/4 * muJz * x**2 
+        # func1 = (1 - x) * (np.arctan(self.a * (x - self.xb)) + np.arctan(self.a*self.xb))
+        return func1
 
-        result = np.zeros_like(x, dtype=float)
-        for i in range(len(x)):
-            x_ = x[i]
-            region = find_region(x_)
-            Param = consts["Params"][region]
-            self.A0 = Param["A"]
-            self.B0 = Param["B"]
-            self.mu = Param["mu"]
-            self.Jz = Param["Jz"]
-            self.muJz = self.mu * self.mu0 * self.Jz
-            if x_ != 0:
-                # func1 = A0 - 1/4 * muJz * x_**2 
-                func1 = self.A0 + self.B0*np.log(x_) - 1/4 * self.muJz * x_**2 
-            else:
-                # func1 = A0 + B0*np.log(x_) - 1/4 * muJz * x_**2 
-                func1 = self.A0 - 1/4 * self.muJz * x_**2 
-            result[i] = func1
-
-        # 如果输入是单个数字，返回单个结果，否则返回数组
-        return result[0] * 1e6 if single_value else result * 1e6
-
-    def info(self):
-        print("A0:", self.A0, "B0:", self.B0, "mu:", self.mu, "Jz:", self.Jz)
-
+    def derivative(self, input_value):
+        x = sp.symbols('x')
+        func1 = (1 - x) * (sp.atan(self.a * (x - self.xb)) + sp.atan(self.a*self.xb))
+        func1_prime = sp.diff(func1, x)
+        return sp.lambdify(x, func1_prime, 'numpy')(input_value)
 
 class rhs_fn():
     def __init__(self, a, xb):
@@ -156,15 +176,15 @@ class rhs_fn():
         self.a = a
         self.xb = xb
         self.scale = [0, 1]
-        self.mu = 1
-        self.mu0 = 1.257*10**-6 # H/m
-        self.Jz = -1326291.1924324587 # A/m^2
+        self.mu = 20
+        self.Jz = 1
+        self.muJz = self.mu * self.Jz
         
     def __call__(self, x):
-        muJz = self.mu * self.mu0 * self.Jz
-        muJz =  self.Jz
-        func1 =  - muJz * x
-        return func1 *220#* 1e6
+        muJz = self.muJz
+        func1 = muJz * x
+        # func1 = -2*(self.a+self.a**3*self.B(x)*(self.B(x)-x+1))/(self.a**2*self.B(x)**2+1)**2
+        return func1
     # def B(self, x):
         # return x - self.xb
 
@@ -172,15 +192,5 @@ class r_r():
     def __init__(self, scale):
         self.name = "LHS"
         self.scale = scale
-        self.mu = 1
     def __call__(self, x):
-        return x /self.mu
-
-
-if __name__ == "__main__":
-    exact_func = exact_fn()
-    
-
-    print(exact_func(0))
-    exact_func.info()
-    
+        return x

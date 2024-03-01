@@ -18,10 +18,9 @@ def G_integrate(u, N=3, scale=(0, 1)):
 
     xp = x*(b-a)/2+(b+a)/2
     wp = w*(b-a)/2
-    # print(wp, xp)
-    # print(scale)
-    
-    # print(u(0.0102))
+
+    # print('xp', xp)
+    # print('wp', wp)
 
     s = 0
     for i in range(N):
@@ -30,8 +29,6 @@ def G_integrate(u, N=3, scale=(0, 1)):
             s += wp[i]*u(xp[i])
         elif name == 'RHS':
             s += wp[i]*u(xp[i])
-        # print(s, wp[i], u(xp[i]))
-        # exit()
         # print('s', s)
         # print(xp[i]*wp[i]*u(xp[i]))
         # print('u', u(xp[i]))

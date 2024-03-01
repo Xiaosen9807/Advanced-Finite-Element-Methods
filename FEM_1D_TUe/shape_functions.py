@@ -158,9 +158,12 @@ class exact_fn():
         self.scale = [0, 1]
 
     def __call__(self, x):
-        A0 = 71
-        muJz = 20
-        func1 = A0 - 1/4 * muJz * x**2 
+        A4 = 2
+        Jz = 20
+        mu4 = 1
+        muJz = Jz*mu4
+        B4 = 2
+        func1 = A4 + B4*np.log(x) - 1/4 * muJz * x**2 
         # func1 = (1 - x) * (np.arctan(self.a * (x - self.xb)) + np.arctan(self.a*self.xb))
         return func1
 
@@ -181,7 +184,7 @@ class rhs_fn():
         self.muJz = self.mu * self.Jz
         
     def __call__(self, x):
-        muJz = self.muJz
+        muJz = self.self.mu * self.Jz
         func1 = muJz * x
         # func1 = -2*(self.a+self.a**3*self.B(x)*(self.B(x)-x+1))/(self.a**2*self.B(x)**2+1)**2
         return func1
