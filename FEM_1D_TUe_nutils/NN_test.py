@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from consts import *
 from sklearn.preprocessing import MinMaxScaler
+import os
 
 mu0 = 1.257e-6
 
@@ -137,12 +138,12 @@ if __name__=="__main__":
     torch.manual_seed(9807)
     # x_train, y_train = generate_data(exact_solution)
     # 生成数据
-    region = 1
+    region = 2
     # 训练模型
-    ws = {"w_pde": .001, "w_bc": 0.1, "w_data": 1, "w_D1": 1000, "w_D2": 10, "w_N": 0}
-    # ws = {"w_pde": 0, "w_bc": 0, "w_data": 30, "w_D1": 100, "w_D2": 1000, "w_N": 1000}
+    ws = {"w_pde": .001, "w_bc": 0.1, "w_data": 1, "w_D1": 4000, "w_D2": 10, "w_N": 0}
+    # ws = {"w_pde": 0, "w_bc": 0, "w_data": 1, "w_D1": 100, "w_D2": 1000, "w_N": 1000}
     print(ws)
-    epochs = 1000
+    epochs = 2000
 
     x_train, y_train = generate_data(region=region,  num_points=1000)
 
@@ -186,12 +187,25 @@ if __name__=="__main__":
     Neumann_grad_1 = torch.autograd.grad(outputs=A1, inputs=r1, grad_outputs=torch.ones_like(A1),retain_graph=True, create_graph=True)[0]
     print("Neumann_grad_0:", Neumann_grad_0.detach().numpy() * scale_x / scale_y)
     print("Neumann_grad_1:", Neumann_grad_1.detach().numpy() * scale_x / scale_y)
+    x_position = max(x_train)  # Start of the x-axis
+    y_position = max(y_pred)  # Position text at the minimum of the exact solution for visibility
+
+    # Add text with a black background
+    # plt.text(x_position, y_position-1, "Duration: {:.2f}s".format(duration), fontsize=14, color='white', bbox=dict(facecolor='black', edgecolor='none', boxstyle='round,pad=0.5'))
+    plt.text(x_position-range_x/5, y_position-range_y/5, "Error: {:.2f}%".format(error), fontsize=10, color='white', bbox=dict(facecolor='black', edgecolor='none', boxstyle='round,pad=0.5'), )
+
+
 
     # 可视化
     plt.plot(x_train.numpy(), y_train.numpy(), label='Exact Solution', linestyle='--')
     plt.plot(x_train.numpy(), y_pred.numpy(), label='PINN Predictions', color='red' )
     plt.legend()
     plt.xlabel('x')
-    plt.ylabel('f(x)')
-    plt.title('Neural Network Approximation vs Exact Solution')
+    plt.ylabel('A')
+    plt.title('Comparison between PINN Solution and Exact Solution')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # 构建完整的文件路径
+    file_path = os.path.join(current_dir, "PINN_region{}.pdf".format(region))
+    plt.savefig(file_path)
     plt.show()
