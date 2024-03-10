@@ -5,38 +5,57 @@ import matplotlib.pyplot as plt
 from consts import *
 from sklearn.preprocessing import MinMaxScaler
 import os
+import time
+from sklearn.metrics import r2_score
 
 mu0 = 1.257e-6
 
-class MinMax:
-   def __init__(self, area):
-       self.min = min(area)
-       self.max = max(area)
+def find_region(value):
+    r1 = consts["r1"]
+    r2 = consts["r2"]
+    r3 = consts["r3"]
+    r4 = consts["r4"]
 
-   def transform(self, x):
-       return x * (self.max - self.min) + self.min
- 
+    # 判断值落在哪个区间
+    if 0 <= value < r1: 
+        return int(0)
+    elif r1 <= value < r2:
+        return int(1)
+    elif r2 <= value < r3:
+        return int(2)
+    elif r3 <= value <= r4:
+        return int(3)
+    else:
+        raise ValueError("Value {} is less than 0 or larger than r4".format(value))
+
     
 def exact_solution(x_input, region=2):
-    # area = [53, 63]
-    # scaler = MinMax((area))
-    # x = scaler.transform(x_input) #/ 10000
-    x = x_input.clone().detach()
-    # print(x[0][0])
-    # exit()
-    # x = x_input
-    mu0 = 1.257e-6
-    Params = consts["Params"][region]
-    mu = Params["mu"]
-    Jz = Params["Jz"]
-    A0 = Params["A"]
-    B0 = Params["B"]
-    if not torch.is_tensor(x):
-        x = torch.tensor(x, dtype=torch.float32)
+    if not torch.is_tensor(x_input):
+        x_input = torch.tensor([x_input], dtype=torch.float32)
+    else:
+        x_input = x_input.clone().detach()
 
-    A = A0 + B0*torch.log(x) - 1/4 * mu* mu0 * Jz *x**2
-    
-    return A * 1e6
+    x_lst = x_input.clone().detach()
+    A_array = torch.zeros_like(x_lst)
+    mu0 = 1.257e-6
+    for id in range(len(x_lst)):
+        x = x_lst[id]
+        region_idx = find_region(x)
+        Params = consts["Params"][region_idx]
+        mu = Params["mu"]
+        Jz = Params["Jz"]
+        A0 = Params["A"]
+        B0 = Params["B"]
+        if not torch.is_tensor(x):
+            x = torch.tensor(x, dtype=torch.float32)
+        if x != 0.:
+
+            A = A0 + B0*torch.log(x) - 1/4 * mu* mu0 * Jz *x**2
+        else:
+            A = A0 - 1/4 * mu* mu0 * Jz *x**2 
+        A_array[id] = A
+        
+    return A_array.reshape(-1, 1) * 1e6
 
 
 def generate_data(region=1, num_points=1000):
@@ -44,8 +63,28 @@ def generate_data(region=1, num_points=1000):
         start, end = 0.0053, 0.0063,
     elif region == 2:
         start, end = 0.0063, 0.0101
+    elif region == 3:
+        start, end = 0.0, 0.0111
+    
+    interfaces_global = [0, 0.0053, 0.0063, 0.0101, 0.0111]
+    x_train = []
+    loop = 0
 
-    x_train = torch.linspace(start, end, num_points).unsqueeze(-1)  
+    for start_, end_ in zip(interfaces_global[:-1], interfaces_global[1:]):
+
+        points = np.linspace(start_, end_, num_points//4, endpoint=False)
+
+        x_train.extend(points)
+        loop+=1
+    # print(loop)
+    # print(len(x_train))
+    
+
+    x_train = torch.tensor(x_train, dtype=torch.float32).reshape(-1, 1)
+    # print(x_train.shape)
+    
+
+    # x_train = torch.linspace(start, end, num_points).unsqueeze(-1)  
     y_train = exact_solution(x_train, region)
     return x_train, y_train
 
@@ -67,7 +106,7 @@ class PINNs(nn.Module):
 
 lossfunc = nn.MSELoss(reduction="sum")
 
-def compute_loss(model, x,  y_true,region, ws={"w_pde":1, "w_data":1, "w_bc":1, "w_D1":1, "w_D2":1, "w_N":1}):
+def compute_loss(model, x,  y_true, region, ws={"w_pde":1, "w_data":1, "w_bc":1, "w_D1":1, "w_D2":1, "w_N":1}):
     w_pde = ws["w_pde"]
     w_data = ws["w_data"]
     w_bc = ws["w_bc"]
@@ -85,10 +124,10 @@ def compute_loss(model, x,  y_true,region, ws={"w_pde":1, "w_data":1, "w_bc":1, 
     pde_loss = lossfunc(drdA, -x*mu*Jz*mu0)
     
     r_0 = x[0].clone().detach().requires_grad_(True)
-    r_1 = x[1].clone().detach().requires_grad_(True)
+    r_1 = x[-1].clone().detach().requires_grad_(True)
     A_0_pred = model(r_0)
     A_1_pred = model(r_1)
-   
+    
 
     # Now use these tensors in your mse_loss calculations
     Dirichlet_BC_1 = lossfunc(A_0_pred, y_true[0])
@@ -97,7 +136,6 @@ def compute_loss(model, x,  y_true,region, ws={"w_pde":1, "w_data":1, "w_bc":1, 
     Dirichlet_BC_2 = lossfunc(A_1_pred, y_true[-1])
 
 
-    # 计算诺伊曼边界条件的损失（这里假设是导数为 0）
     Neumann_BC_grad = torch.autograd.grad(outputs=A_0_pred, inputs=r_0, grad_outputs=torch.ones_like(A_0_pred),retain_graph=True, create_graph=True)[0]
 
     expected_grad = torch.zeros_like(Neumann_BC_grad)
@@ -130,19 +168,39 @@ def train(model, x_data, y_data, region=1, epochs=5000, lr=0.01,ws={"w_pde":1, "
 
 
 def RAE(y_pred, y_true):
-    error =  torch.mean(torch.abs(y_pred - y_true)/torch.abs(y_true)) * 100
-    return float(error)
+    # error =  torch.mean(torch.abs(y_pred - y_true)/torch.abs(y_true)) * 100
+    # error = torch.mean(torch.abs(y_true - y_pred) / torch.abs(y_true))
+    numerator = torch.sum(torch.abs(y_true - y_pred))
+
+    y_mean = torch.mean(y_true)
+    denominator = torch.sum(torch.abs(y_true - y_mean))
+
+    
+    error = numerator / denominator if denominator != 0 else None
+
+
+    try:
+        return float(error) * 100  #in %
+    except:
+        raise ValueError("Error: RAE cannot be computed.")
+
 
 
 if __name__=="__main__":
     torch.manual_seed(9807)
     # x_train, y_train = generate_data(exact_solution)
-    # 生成数据
-    region = 2
-    # 训练模型
-    ws = {"w_pde": .001, "w_bc": 0.1, "w_data": 1, "w_D1": 4000, "w_D2": 10, "w_N": 0}
-    # ws = {"w_pde": 0, "w_bc": 0, "w_data": 1, "w_D1": 100, "w_D2": 1000, "w_N": 1000}
+    region = 3
+    DNN = True
+
+    if region == 3:
+        ws = {"w_pde": .0000001, "w_bc": 1, "w_data": 1, "w_D1":0 , "w_D2": 1000, "w_N": 1000}
+        if DNN:
+            ws = {"w_pde": .00, "w_bc": 0., "w_data": 1, "w_D1": 4000, "w_D2": 10, "w_N": 0}
+    else:
+        raise ValueError("region must be 3")
+        
     print(ws)
+
     epochs = 2000
 
     x_train, y_train = generate_data(region=region,  num_points=1000)
@@ -156,8 +214,15 @@ if __name__=="__main__":
     y_train_normalized = torch.tensor(y_scaler.fit_transform(y_train), dtype=torch.float32)
 
     model = PINNs()
+    
+    start_time = time.time()
 
     train(model=model, x_data=x_train_normalized, y_data=y_train_normalized, region=region, epochs=epochs, lr=0.01,ws=ws, verbose = True)
+    duration = time.time() - start_time
+
+    print("Duration: {:.2f}s".format(duration))
+
+
     model.eval()
     with torch.no_grad():
         # 生成测试数据并进行归一化
@@ -166,9 +231,18 @@ if __name__=="__main__":
 
         # 将预测结果反归一化
         y_pred = torch.tensor(y_scaler.inverse_transform(y_pred_normalized), dtype=torch.float32)
+    # print(y_pred[:10], y_train[:10])
+    # print(RAE(y_pred=y_pred_normalized[:100], y_true=y_train_normalized[:100]))
+    # print(RAE(y_pred=y_pred_normalized, y_true=y_train_normalized))
+    r2 = r2_score(y_train, y_pred)
+    # plt.plot(y_pred[-100:])
+    # plt.show()
+    # exit()
+
+    # print(f"R² score: {r2}")
     error = RAE(y_pred=y_pred, y_true=y_train)
     
-    print("Relative Absolute Error: {:.2f}%".format(error))
+    print("Relative Absolute Error: {:.3g}%".format(error))
 
     r0 = x_test_normalized[0].clone().detach().requires_grad_(True) 
     A0 = model(r0)
@@ -192,20 +266,51 @@ if __name__=="__main__":
 
     # Add text with a black background
     # plt.text(x_position, y_position-1, "Duration: {:.2f}s".format(duration), fontsize=14, color='white', bbox=dict(facecolor='black', edgecolor='none', boxstyle='round,pad=0.5'))
-    plt.text(x_position-range_x/5, y_position-range_y/5, "Error: {:.2f}%".format(error), fontsize=10, color='white', bbox=dict(facecolor='black', edgecolor='none', boxstyle='round,pad=0.5'), )
+    fontsize=14
+    plt.text(x_position-range_x/3, y_position-range_y/5, "Error: {:.3g}%".format(error), fontsize=10, color='white', bbox=dict(facecolor='black', edgecolor='none', boxstyle='round,pad=0.5'), )
+    x_data = x_train.reshape(-1) * 1000
+    x_data_ori = np.linspace(x_train[0][0], x_train[-1][0], 5) 
+    x_data = np.around(x_data_ori * 1000, decimals=2)
+    print(x_data.shape, x_train.shape)
+    print(x_data[0], x_data[-1])
+    
 
-
-
-    # 可视化
+    # print(x_train.shape, y_train)
     plt.plot(x_train.numpy(), y_train.numpy(), label='Exact Solution', linestyle='--')
-    plt.plot(x_train.numpy(), y_pred.numpy(), label='PINN Predictions', color='red' )
+    if ws["w_pde"] != 0:
+        PINN_name = "PINN"
+    else:
+        PINN_name = "DNN"
+    
+    plt.plot(x_train.numpy(), y_pred.numpy(), label='{} Predictions'.format(PINN_name),)
+    region_name = [["r1", "r2" , "r", "g", 0.0001], ["r2", "r3", "g", "b", 1], ["r1", "r2" , "r", "y", 0.0001],]
+    r1_x_position = x_data_ori[0]
+    r2_x_position = x_data_ori[-1]
+    y_min, y_max = plt.ylim()
+    r1 = consts["r1"]
+    r2 = consts["r2"]
+    r3 = consts["r3"]
+    r4 = consts["r4"]
+    fontsize = 14
+    plt.axvline(x=r1, color='r', linestyle='--') 
+    plt.text(r1, 105, "r1", fontsize=14, color='r')
+    plt.axvline(x=r2, color='g', linestyle='--') 
+
+    plt.text(r2, 105, "r2", fontsize=14, color='g')
+    plt.axvline(x=r3, color='b', linestyle='--') 
+    plt.text(r3, 105, "r3", fontsize=14, color='b')
+    plt.axvline(x=r4, color='y', linestyle='--') 
+    plt.text(r4, 105, "r4", fontsize=14, color='y')
+
     plt.legend()
-    plt.xlabel('x')
-    plt.ylabel('A')
-    plt.title('Comparison between PINN Solution and Exact Solution')
+    # plt.xticks(ticks=x_data_ori.reshape(-1), labels=x_data)
+    interfaces_mm = [i*1000 for i in interfaces_global]
+    plt.xticks(ticks=interfaces_global, labels=interfaces_mm)
+    plt.xlabel("r (mm)", fontsize =fontsize)
+    plt.ylabel("A (µWb/m)", fontsize=fontsize)
+    # plt.title('Comparison between PINN Solution and Exact Solution')
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # 构建完整的文件路径
-    file_path = os.path.join(current_dir, "PINN_region{}.pdf".format(region))
+    file_path = os.path.join(current_dir, "{}_region{}.png".format(PINN_name, region))
     plt.savefig(file_path)
     plt.show()

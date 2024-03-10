@@ -213,5 +213,14 @@ if __name__ == "__main__":
     plt.figure()
     plt.plot(r_test, A_z_pinn, label="PINN")
     plt.plot(r_test, A_z_exact, label="PINN")
+    plt.grid(True)
+    # 获取当前脚本文件的目录
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # 构建完整的文件路径
+    file_path = os.path.join(current_dir, "inverse_Solution_w_pde{}.pdf".format(ws["w_pde"]))
+
+    # 保存文件
+    plt.savefig(file_path)
     plt.show()
 
